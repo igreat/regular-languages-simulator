@@ -1,4 +1,3 @@
-import Link from "next/link";
 import GraphTest from "./graphtest";
 
 export default function HomePage() {

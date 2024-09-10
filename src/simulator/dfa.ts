@@ -20,8 +20,8 @@ class DFA {
 
     accepts(input: string): boolean {
         let state = 0;
-        for (let c of input) {
-            let next = this.run(c, state);
+        for (const c of input) {
+            const next = this.run(c, state);
             if (next != null) state = next;
         }
         return this.isAcceptState(state);
@@ -35,11 +35,7 @@ class DFA {
     }
 }
 
-type TransitionTable = {
-    [key: number]: {
-        [key: string]: number;
-    };
-};
+type TransitionTable = Record<number, Record<string, number>>;
 
 type DFAJson = {
     acceptStates: number[];

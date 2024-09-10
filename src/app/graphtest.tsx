@@ -13,7 +13,7 @@ export default function GraphTest() {
 
   const data: Data = {
     // set random x and y
-    nodes: Array.from({ length: 10 }, (_, i) => ({})),
+    nodes: Array.from({ length: 10 }, () => ({})),
     links: [
       { source: 0, target: 2 },
       { source: 1, target: 5 },
@@ -105,28 +105,24 @@ export default function GraphTest() {
         });
 
       node
-        .attr("cx", (d) => {
-          return d.x != undefined ? d.x : 0;
-        })
-        .attr("cy", (d) => {
-          return d.y != undefined ? d.y : 0;
-        });
+        .attr("cx", (d) => d?.x ?? 0)
+        .attr("cy", (d) => d?.y ?? 0);
     });
 
     // Reheat the simulation when drag starts, and fix the subject position.
-    function dragstarted(event: any) {
+    function dragstarted(event: d3.D3DragEvent<SVGCircleElement, d3.SimulationNodeDatum, d3.SimulationNodeDatum>) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }
 
     // Update the subject (dragged node) position during drag.
-    function dragged(event: any) {
+    function dragged(event: d3.D3DragEvent<SVGCircleElement, d3.SimulationNodeDatum, d3.SimulationNodeDatum>) {
       event.subject.fx = event.x;
       event.subject.fy = event.y;
     }
 
-    function dragended(event: any) {
+    function dragended(event: d3.D3DragEvent<SVGCircleElement, d3.SimulationNodeDatum, d3.SimulationNodeDatum>) {
       if (!event.active) simulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;

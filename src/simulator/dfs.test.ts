@@ -1,4 +1,5 @@
-import { DFA, DFAJson } from "./dfa";
+import { DFA } from "./dfa";
+import type { DFAJson } from "./dfa";
 
 describe("Loading and saving DFA", () => {
     let dfa: DFA;
