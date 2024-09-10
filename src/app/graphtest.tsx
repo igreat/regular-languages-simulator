@@ -3,17 +3,19 @@
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 
+type Data = {
+  nodes: d3.SimulationNodeDatum[];
+  links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
+};
+
 export default function GraphTest() {
   const ref = useRef(null);
 
-  const data = {
+  const data: Data = {
     // set random x and y
-    nodes: Array.from({ length: 11 }, (_, i) => ({
-      x: Math.random() * 500,
-      y: Math.random() * 500,
-    })),
+    nodes: Array.from({ length: 10 }, (_, i) => ({})),
     links: [
-      { source: 1, target: 2 },
+      { source: 0, target: 2 },
       { source: 1, target: 5 },
       { source: 1, target: 6 },
       { source: 2, target: 3 },
@@ -22,7 +24,7 @@ export default function GraphTest() {
       { source: 8, target: 3 },
       { source: 4, target: 5 },
       { source: 4, target: 9 },
-      { source: 5, target: 10 },
+      { source: 5, target: 9 },
     ],
   };
 
@@ -64,41 +66,67 @@ export default function GraphTest() {
       .attr("r", 5);
 
     node.append("title").text((d) => {
-      return d.index ? d.index : -1;
+      return `Node ${d.index}`;
     });
 
-    node.call(
+    (node as d3.Selection<SVGCircleElement, d3.SimulationNodeDatum, SVGGElement, unknown>).call(
       d3
-        .drag()
+        .drag<SVGCircleElement, d3.SimulationNodeDatum>()
         .on("start", dragstarted)
         .on("drag", dragged)
-        .on("end", dragended),
+        .on("end", dragended)
     );
 
     simulation.on("tick", () => {
       link
-        .attr("x1", (d) => d.source.x)
-        .attr("y1", (d) => d.source.y)
-        .attr("x2", (d) => d.target.x)
-        .attr("y2", (d) => d.target.y);
+        .attr("x1", (d) => {
+          if (typeof d.source == "object" && d.source.x != undefined) {
+            return d.source.x;
+          }
+          return 0;
+        })
+        .attr("y1", (d) => {
+          if (typeof d.source == "object" && d.source.y != undefined) {
+            return d.source.y;
+          }
+          return 0;
+        })
+        .attr("x2", (d) => {
+          if (typeof d.target == "object" && d.target.x != undefined) {
+            return d.target.x;
+          }
+          return 0;
+        })
+        .attr("y2", (d) => {
+          if (typeof d.target == "object" && d.target.y != undefined) {
+            return d.target.y;
+          }
+          return 0;
+        });
 
-      node.attr("cx", (d) => d.x).attr("cy", (d) => d.y);
+      node
+        .attr("cx", (d) => {
+          return d.x != undefined ? d.x : 0;
+        })
+        .attr("cy", (d) => {
+          return d.y != undefined ? d.y : 0;
+        });
     });
 
     // Reheat the simulation when drag starts, and fix the subject position.
-    function dragstarted(event) {
+    function dragstarted(event: any) {
       if (!event.active) simulation.alphaTarget(0.3).restart();
       event.subject.fx = event.subject.x;
       event.subject.fy = event.subject.y;
     }
 
     // Update the subject (dragged node) position during drag.
-    function dragged(event) {
+    function dragged(event: any) {
       event.subject.fx = event.x;
       event.subject.fy = event.y;
     }
 
-    function dragended(event) {
+    function dragended(event: any) {
       if (!event.active) simulation.alphaTarget(0);
       event.subject.fx = null;
       event.subject.fy = null;
