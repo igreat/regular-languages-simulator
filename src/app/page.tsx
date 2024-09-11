@@ -1,37 +1,14 @@
 "use client";
 
-import DFAGraph from "./DFAGraph";
 import type { DFAData } from "./DFAGraph";
-import { useEffect, useState } from "react";
+import type { DFAJson } from "../simulator/dfa";
 
-const data: DFAData = {
-  nodes: Array.from({ length: 10 }, () => ({})),
-  links: [
-    { source: 0, target: 2 },
-    { source: 1, target: 5 },
-    { source: 1, target: 6 },
-    { source: 2, target: 3 },
-    { source: 2, target: 7 },
-    { source: 3, target: 4 },
-    { source: 8, target: 3 },
-    { source: 4, target: 5 },
-    { source: 4, target: 9 },
-    { source: 5, target: 9 },
-  ],
-  nodeLabels: ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
-  linkLabels: [
-    "A->C",
-    "B->F",
-    "B->G",
-    "C->D",
-    "C->H",
-    "D->E",
-    "I->D",
-    "E->F",
-    "E->J",
-    "F->J",
-  ],
-};
+import DFAGraph from "./DFAGraph";
+import { DFAJsonToDFAData } from "~/utils/utils";
+import { useEffect, useState } from "react";
+import dfaJson from "../../data/postfix_aba_dfa.json";
+
+const data: DFAData = DFAJsonToDFAData(dfaJson as DFAJson);
 
 export default function HomePage() {
   const [activeNode, setActiveNode] = useState<number | null>(null);

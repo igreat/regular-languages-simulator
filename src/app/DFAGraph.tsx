@@ -60,10 +60,10 @@ function setupMarkers(svg: SVGSelection) {
     .append("marker")
     .attr("id", "arrow")
     .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 11)
+    .attr("refX", 5)
     .attr("refY", 0)
-    .attr("markerWidth", 6)
-    .attr("markerHeight", 6)
+    .attr("markerWidth", 5)
+    .attr("markerHeight", 5)
     .attr("orient", "auto")
     .append("path")
     .attr("d", "M0,-5L10,0L0,5")
@@ -202,6 +202,26 @@ function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
   const x2 = d.target.x ?? 0;
   const y2 = d.target.y ?? 0;
 
+  if (d.source.index === d.target.index) {
+    console.log("self loop");
+    const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
+    const [x1Rotated, y1Rotated] = rotatePoint(
+      x1 + 16,
+      y1 + 16,
+      x1,
+      y1,
+      direction,
+    );
+    const [x2Rotated, y2Rotated] = rotatePoint(
+      x1 + 16,
+      y1 + 16,
+      x1,
+      y1,
+      direction + Math.PI / 3,
+    );
+    return `M ${x1Rotated} ${y1Rotated} A ${18} ${18} ${0} ${1} ${1} ${x2Rotated} ${y2Rotated}`;
+  }
+
   const dx = x2 - x1;
   const dy = y2 - y1;
   const dr = Math.sqrt(dx * dx + dy * dy);
@@ -209,18 +229,57 @@ function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
   const normX = dx / dr;
   const normY = dy / dr;
 
-  const sourceRadius = 0;
-  const targetRadius = 18;
+  const sourceRadius = 21;
+  const targetRadius = 25;
 
-  const sourceX = x1 + normX * sourceRadius;
-  const sourceY = y1 + normY * sourceRadius;
-  const targetX = x2 - normX * targetRadius;
-  const targetY = y2 - normY * targetRadius;
+  const curveDir = x1 < x2 || y2 < y1 ? -1 : 1;
+  const orientation = -curveDir * Math.sign(dy);
 
-  const controlX = (sourceX + targetX) / 2 + dr * 0.15;
-  const controlY = (sourceY + targetY) / 2 - dr * 0.15;
+  const x1Outer = x1 + normX * sourceRadius;
+  const y1Outer = y1 + normY * sourceRadius;
+  const [x1Rotated, y1Rotated] = rotatePoint(
+    x1Outer,
+    y1Outer,
+    x1,
+    y1,
+    (orientation * Math.PI) / 5,
+  );
 
-  return `M ${sourceX} ${sourceY} Q ${controlX} ${controlY} ${targetX} ${targetY}`;
+  const x2Outer = x2 - normX * targetRadius;
+  const y2Outer = y2 - normY * targetRadius;
+  const [x2Rotated, y2Rotated] = rotatePoint(
+    x2Outer,
+    y2Outer,
+    x2,
+    y2,
+    (-orientation * Math.PI) / 5,
+  );
+
+  const controlX = (x1Rotated + x2Rotated) / 2 + curveDir * dr * 0.15;
+  const controlY = (y1Rotated + y2Rotated) / 2 + curveDir * dr * 0.15;
+
+  return `M ${x1Rotated} ${y1Rotated} Q ${controlX} ${controlY} ${x2Rotated} ${y2Rotated}`;
+}
+
+function rotatePoint(
+  x: number,
+  y: number,
+  cx: number,
+  cy: number,
+  angle: number,
+): [number, number] {
+  const translatedX = x - cx;
+  const translatedY = y - cy;
+
+  const rotatedX =
+    translatedX * Math.cos(angle) - translatedY * Math.sin(angle);
+  const rotatedY =
+    translatedX * Math.sin(angle) + translatedY * Math.cos(angle);
+
+  const finalX = rotatedX + cx;
+  const finalY = rotatedY + cy;
+
+  return [finalX, finalY];
 }
 
 function dragstarted(
@@ -263,6 +322,7 @@ type DFAData = {
   links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
   nodeLabels: string[];
   linkLabels: string[];
+  acceptStates?: number[];
 };
 
 type SVGSelection = d3.Selection<SVGSVGElement, unknown, null, undefined>;
