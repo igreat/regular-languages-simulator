@@ -2,6 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
+import { curvePath } from "../utils/utils";
 
 export default function DFAGraph({
   data,
@@ -192,94 +193,6 @@ function updateGraph(
           ((d.target as d3.SimulationNodeDatum).y ?? 0)) /
         2,
     );
-}
-
-function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
-  if (typeof d.source !== "object" || typeof d.target !== "object") return "";
-
-  const x1 = d.source.x ?? 0;
-  const y1 = d.source.y ?? 0;
-  const x2 = d.target.x ?? 0;
-  const y2 = d.target.y ?? 0;
-
-  if (d.source.index === d.target.index) {
-    console.log("self loop");
-    const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
-    const [x1Rotated, y1Rotated] = rotatePoint(
-      x1 + 16,
-      y1 + 16,
-      x1,
-      y1,
-      direction,
-    );
-    const [x2Rotated, y2Rotated] = rotatePoint(
-      x1 + 16,
-      y1 + 16,
-      x1,
-      y1,
-      direction + Math.PI / 3,
-    );
-    return `M ${x1Rotated} ${y1Rotated} A ${18} ${18} ${0} ${1} ${1} ${x2Rotated} ${y2Rotated}`;
-  }
-
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const dr = Math.sqrt(dx * dx + dy * dy);
-
-  const normX = dx / dr;
-  const normY = dy / dr;
-
-  const sourceRadius = 21;
-  const targetRadius = 25;
-
-  const curveDir = x1 < x2 || y2 < y1 ? -1 : 1;
-  const orientation = -curveDir * Math.sign(dy);
-
-  const x1Outer = x1 + normX * sourceRadius;
-  const y1Outer = y1 + normY * sourceRadius;
-  const [x1Rotated, y1Rotated] = rotatePoint(
-    x1Outer,
-    y1Outer,
-    x1,
-    y1,
-    (orientation * Math.PI) / 5,
-  );
-
-  const x2Outer = x2 - normX * targetRadius;
-  const y2Outer = y2 - normY * targetRadius;
-  const [x2Rotated, y2Rotated] = rotatePoint(
-    x2Outer,
-    y2Outer,
-    x2,
-    y2,
-    (-orientation * Math.PI) / 5,
-  );
-
-  const controlX = (x1Rotated + x2Rotated) / 2 + curveDir * dr * 0.15;
-  const controlY = (y1Rotated + y2Rotated) / 2 + curveDir * dr * 0.15;
-
-  return `M ${x1Rotated} ${y1Rotated} Q ${controlX} ${controlY} ${x2Rotated} ${y2Rotated}`;
-}
-
-function rotatePoint(
-  x: number,
-  y: number,
-  cx: number,
-  cy: number,
-  angle: number,
-): [number, number] {
-  const translatedX = x - cx;
-  const translatedY = y - cy;
-
-  const rotatedX =
-    translatedX * Math.cos(angle) - translatedY * Math.sin(angle);
-  const rotatedY =
-    translatedX * Math.sin(angle) + translatedY * Math.cos(angle);
-
-  const finalX = rotatedX + cx;
-  const finalY = rotatedY + cy;
-
-  return [finalX, finalY];
 }
 
 function dragstarted(
