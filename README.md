@@ -5,7 +5,7 @@
 - [x] Deploy (Vercel)
 - [x] Implement the core DFA logic
 - [x] Saving and loading DFA to/from JSON
-- [ ] Drawing DFA into page
+- [x] Drawing DFA into page
 - [ ] Simulating DFA from UI
 - [ ] Basic UI (React)
 - [ ] Creating DFA from UI

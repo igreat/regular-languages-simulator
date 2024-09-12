@@ -2,14 +2,14 @@
 
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
-import { curvePath, getCurveDirection, rotatePoint } from "../utils/utils";
+import { curvePath, getBezierMidpoint, rotatePoint } from "../utils/utils";
 
 export default function DFAGraph({
   data,
   activeNode,
 }: {
   data: DFAData;
-  activeNode: number | null;
+  activeNode: number | null
 }) {
   const ref = useRef<SVGSVGElement | null>(null);
 
@@ -192,23 +192,12 @@ function updateGraph(
       if (src.index === tgt.index) {
         const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
         const [x1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
-        const [x2Rotated] = rotatePoint(
-          x1 + 16,
-          y1 + 16,
-          x1,
-          y1,
-          direction + Math.PI / 3,
-        );
+        const [x2Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction + Math.PI / 3);
 
         return (x1Rotated + x2Rotated) / 2 - direction * 20;
       }
 
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const dr = Math.sqrt(dx * dx + dy * dy);
-
-      const [curveDirX] = getCurveDirection(x1, y1, x2, y2);
-      return (x1 + x2) / 2 + curveDirX * dr * 0.15;
+      return getBezierMidpoint(x1, y1, x2, y2)[0];
     })
     .attr("y", (d) => {
       const src = d.source as d3.SimulationNodeDatum;
@@ -222,22 +211,11 @@ function updateGraph(
       if (src.index === tgt.index) {
         const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
         const [, y1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
-        const [, y2Rotated] = rotatePoint(
-          x1 + 16,
-          y1 + 16,
-          x1,
-          y1,
-          direction + Math.PI / 3,
-        );
+        const [, y2Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction + Math.PI / 3);
         return (y1Rotated + y2Rotated) / 2 + 30;
       }
 
-      const dx = x2 - x1;
-      const dy = y2 - y1;
-      const dr = Math.sqrt(dx * dx + dy * dy);
-
-      const [, curveDirY] = getCurveDirection(x1, y1, x2, y2);
-      return (y1 + y2) / 2 + curveDirY * dr * 0.15;
+      return getBezierMidpoint(x1, y1, x2, y2)[1];
     });
 }
 
