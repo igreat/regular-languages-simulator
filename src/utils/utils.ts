@@ -18,14 +18,15 @@ export function DFAJsonToDFAData(data: DFAJson): DFAData {
 }
 
 export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
-    if (typeof d.source !== "object" || typeof d.target !== "object") return "";
+    const src = d.source as d3.SimulationNodeDatum;
+    const tgt = d.target as d3.SimulationNodeDatum;
 
-    const x1 = d.source.x ?? 0;
-    const y1 = d.source.y ?? 0;
-    const x2 = d.target.x ?? 0;
-    const y2 = d.target.y ?? 0;
+    const x1 = src.x ?? 0;
+    const y1 = src.y ?? 0;
+    const x2 = tgt.x ?? 0;
+    const y2 = tgt.y ?? 0;
 
-    if (d.source.index === d.target.index) {
+    if (src.index === tgt.index) {
         const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
         const [x1Rotated, y1Rotated] = rotatePoint(
             x1 + 16,
@@ -83,26 +84,26 @@ export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
     return `M ${x1Rotated} ${y1Rotated} Q ${controlX} ${controlY} ${x2Rotated} ${y2Rotated}`;
 }
 
-function getOrientation(x1: number, y1: number, x2: number, y2: number) {
-    if (x1 < x2 && y1 < y2) return -1;
-    if (x1 < x2 && y1 >= y2) return 1;
-    if (x1 >= x2 && y1 < y2) return 1;
-    return -1;
+export function getOrientation(x1: number, y1: number, x2: number, y2: number) {
+    if (x1 < x2 && y1 < y2) return 1;
+    if (x1 < x2 && y1 >= y2) return -1;
+    if (x1 >= x2 && y1 < y2) return -1;
+    return 1;
 }
 
-function getCurveDirection(
+export function getCurveDirection(
     x1: number,
     y1: number,
     x2: number,
     y2: number,
 ): [number, number] {
-    if (x1 < x2 && y1 < y2) return [1, -1];
-    if (x1 < x2 && y1 >= y2) return [1, 1];
-    if (x1 >= x2 && y1 < y2) return [-1, -1];
-    return [-1, 1];
+    if (x1 < x2 && y1 < y2) return [-1, 1];
+    if (x1 < x2 && y1 >= y2) return [-1, -1];
+    if (x1 >= x2 && y1 < y2) return [1, 1];
+    return [1, -1];
 }
 
-function rotatePoint(
+export function rotatePoint(
     x: number,
     y: number,
     cx: number,

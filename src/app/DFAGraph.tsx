@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
-import { curvePath } from "../utils/utils";
+import { curvePath, getCurveDirection, rotatePoint } from "../utils/utils";
 
 export default function DFAGraph({
   data,
@@ -74,12 +74,12 @@ function setupMarkers(svg: SVGSelection) {
 function setupSimulation(data: DFAData) {
   return d3
     .forceSimulation(data.nodes)
-    .force("link", d3.forceLink(data.links).strength(0.05))
+    .force("link", d3.forceLink(data.links).strength(0.005))
     .force("collide", d3.forceCollide().radius(20))
-    .force("center", d3.forceCenter())
-    .force("charge", d3.forceManyBody().strength(-250))
-    .force("y", d3.forceY().strength(0.04))
-    .force("x", d3.forceX().strength(0.02));
+    .force("center", d3.forceCenter().strength(1))
+    .force("charge", d3.forceManyBody().strength(-150))
+    .force("y", d3.forceY().strength(0.01))
+    .force("x", d3.forceX().strength(0.01));
 }
 
 function renderLinks(
@@ -178,21 +178,67 @@ function updateGraph(
 
   node.attr("cx", (d) => d?.x ?? 0).attr("cy", (d) => d?.y ?? 0);
   nodeLabel.attr("x", (d) => d?.x ?? 0).attr("y", (d) => (d?.y ?? 0) + 4);
+
   linkLabel
-    .attr(
-      "x",
-      (d) =>
-        (((d.source as d3.SimulationNodeDatum).x ?? 0) +
-          ((d.target as d3.SimulationNodeDatum).x ?? 0)) /
-        2,
-    )
-    .attr(
-      "y",
-      (d) =>
-        (((d.source as d3.SimulationNodeDatum).y ?? 0) +
-          ((d.target as d3.SimulationNodeDatum).y ?? 0)) /
-        2,
-    );
+    .attr("x", (d) => {
+      const src = d.source as d3.SimulationNodeDatum;
+      const tgt = d.target as d3.SimulationNodeDatum;
+
+      const x1 = src.x ?? 0;
+      const y1 = src.y ?? 0;
+      const x2 = tgt.x ?? 0;
+      const y2 = tgt.y ?? 0;
+
+      if (src.index === tgt.index) {
+        const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
+        const [x1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
+        const [x2Rotated] = rotatePoint(
+          x1 + 16,
+          y1 + 16,
+          x1,
+          y1,
+          direction + Math.PI / 3,
+        );
+
+        return (x1Rotated + x2Rotated) / 2 - direction * 20;
+      }
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const dr = Math.sqrt(dx * dx + dy * dy);
+
+      const [curveDirX] = getCurveDirection(x1, y1, x2, y2);
+      return (x1 + x2) / 2 + curveDirX * dr * 0.15;
+    })
+    .attr("y", (d) => {
+      const src = d.source as d3.SimulationNodeDatum;
+      const tgt = d.target as d3.SimulationNodeDatum;
+
+      const x1 = src.x ?? 0;
+      const y1 = src.y ?? 0;
+      const x2 = tgt.x ?? 0;
+      const y2 = tgt.y ?? 0;
+
+      if (src.index === tgt.index) {
+        const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
+        const [, y1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
+        const [, y2Rotated] = rotatePoint(
+          x1 + 16,
+          y1 + 16,
+          x1,
+          y1,
+          direction + Math.PI / 3,
+        );
+        return (y1Rotated + y2Rotated) / 2 + 30;
+      }
+
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const dr = Math.sqrt(dx * dx + dy * dy);
+
+      const [, curveDirY] = getCurveDirection(x1, y1, x2, y2);
+      return (y1 + y2) / 2 + curveDirY * dr * 0.15;
+    });
 }
 
 function dragstarted(
