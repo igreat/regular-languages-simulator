@@ -3,8 +3,10 @@ import "~/styles/globals.css";
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 
+import Link from "next/link";
+
 export const metadata: Metadata = {
-  title: "DFA Simulator",
+  title: "Automata Simulator",
   description: "A simple DFA simulator",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
@@ -12,7 +14,17 @@ export const metadata: Metadata = {
 function TopNav() {
   return (
     <nav className="flex items-center justify-between p-4 bg-gray-800 text-white text-xl font-bold">
-      <div>Automata Simulator</div>
+      <Link
+        className="text-white"
+        href="/"
+      >
+        Automata Simulator
+      </Link>
+      <div className="flex gap-4">
+        <Link href="/login">
+          Log In
+        </Link>
+      </div>
     </nav>
   );
 }
