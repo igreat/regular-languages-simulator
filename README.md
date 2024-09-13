@@ -7,8 +7,8 @@
 - [x] Saving and loading DFA to/from JSON
 - [x] Drawing DFA into page
 - [x] Simulating DFA from UI
-- [ ] Basic UI (React)
 - [ ] Creating DFA from UI textual
+- [ ] Basic UI (React)
 - [ ] Creating DFA from UI drag and drop
 - [ ] Editing DFA from UI
 - [ ] Saving and loading DFA from database (Vercel Postgres)

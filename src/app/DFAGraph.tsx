@@ -15,9 +15,11 @@ export default function DFAGraph({
 
   useEffect(() => {
     const svg = d3.select(ref.current) as SVGSelection;
-    const width = 760;
+    const width = 350;
     const height = 300;
-    const margin = { top: 5, right: 15, bottom: 5, left: 15 };
+    const margin = { top: 5, right:  15, bottom: 5, left: 15 };
+
+    svg.selectAll("*").remove();
 
     svg
       .attr("width", width + margin.left + margin.right)
