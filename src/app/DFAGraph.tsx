@@ -15,9 +15,9 @@ export default function DFAGraph({
 
   useEffect(() => {
     const svg = d3.select(ref.current) as SVGSelection;
-    const width = 1000;
-    const height = 500;
-    const margin = { top: 10, right: 30, bottom: 30, left: 40 };
+    const width = 760;
+    const height = 300;
+    const margin = { top: 5, right: 15, bottom: 5, left: 15 };
 
     svg
       .attr("width", width + margin.left + margin.right)
@@ -38,7 +38,7 @@ export default function DFAGraph({
     );
 
     simulation.on("tick", () =>
-      updateGraph(svg, node, link, nodeLabel, linkLabel),
+      updateGraph(node, link, nodeLabel, linkLabel),
     );
   }, [data]);
 
@@ -48,7 +48,7 @@ export default function DFAGraph({
 
       svg
         .selectAll("circle")
-        .style("fill", (d, i) => (i === activeNode ? "red" : "#000"));
+        .style("fill", (_, i) => (i === activeNode ? "red" : "#000"));
     }
   }, [activeNode]);
 
@@ -168,7 +168,6 @@ function renderLabels(
 }
 
 function updateGraph(
-  svg: SVGSelection,
   node: NodeSelection,
   link: LinkSelection,
   nodeLabel: NodeLabelSelection,
