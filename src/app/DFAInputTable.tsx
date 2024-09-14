@@ -55,6 +55,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                             </th>
                         ))}
                         <th className="border border-gray-700 px-2 py-1">Accept</th>
+                        <th className="border border-gray-700 px-2 py-1">Delete</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,6 +100,20 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                                         }
                                     }}
                                 />
+                            </td>
+                            <td className="border border-gray-700 px-2 py-1 text-center">
+                                <button
+                                    onClick={() => {
+                                        const newTable = { ...table };
+                                        delete newTable[state];
+                                        setTable(newTable);
+                                        setStates(states.filter((s) => s !== state));
+                                        setAcceptStates(acceptStates.filter((s) => s !== state));
+                                    }}
+                                    className="bg-red-800 text-white rounded-md px-2.5 py-0.5"
+                                >
+                                    ✘
+                                </button>
                             </td>
                         </tr>
                     ))}
