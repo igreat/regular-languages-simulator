@@ -12,6 +12,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
     const [inputSymbols, setInputSymbols] = React.useState<string[]>([]);
     const [acceptStates, setAcceptStates] = React.useState<number[]>([]);
     const [table, setTable] = React.useState<TransitionTable>({});
+    const [newSymbol, setNewSymbol] = React.useState<string>("");
 
     useEffect(() => {
         if (initialDFA) {
@@ -19,8 +20,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
             setStates(stateIds);
             const symbols = new Set<string>();
             stateIds.forEach((state) => {
-                if (!initialDFA.table[state])
-                    return;
+                if (!initialDFA.table[state]) return;
                 Object.keys(initialDFA.table[state]).forEach((sym) => {
                     symbols.add(sym);
                 });
@@ -29,7 +29,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
             setAcceptStates(initialDFA.acceptStates);
             setTable(initialDFA.table);
         } else {
-            // initialize
+            // Initialize with default DFA
             setStates([0]);
             setInputSymbols(["a", "b"]);
             setAcceptStates([0]);
@@ -37,14 +37,59 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
         }
     }, [initialDFA]);
 
-    // Update the parent component with the new DFA data
     useEffect(() => {
         onDFAChange(JSON.stringify({ acceptStates, table }, null, 2));
     }, [acceptStates, table, onDFAChange]);
 
+    const handleAddSymbol = () => {
+        const sym = newSymbol.trim();
+        if (sym.length !== 1) {
+            alert("Input symbol must be a single character.");
+            return;
+        }
+        if (inputSymbols.includes(sym)) {
+            return;
+        }
+        setInputSymbols([...inputSymbols, sym]);
+    };
+
+    // Allow adding symbol by pressing Enter key
+    const handleNewSymbolKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter') {
+            handleAddSymbol();
+        }
+    }
+
     return (
         <div className="p-4 bg-gray-800 text-white rounded-md w-full max-w-md overflow-x-auto">
-            <h2 className="text-lg font-bold mb-4">DFA Input Table</h2>
+            {/* Section to add a new input symbol */}
+            <div className="flex items-center mb-4">
+                <input
+                    type="text"
+                    value={newSymbol}
+                    onChange={(e) => setNewSymbol(e.target.value)}
+                    onKeyDown={handleNewSymbolKeyPress}
+                    maxLength={1}
+                    className="w-12 bg-gray-700 text-white px-2 py-1 rounded-md mr-2"
+                    placeholder="Symbol"
+                />
+                <button
+                    onClick={handleAddSymbol}
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
+                    disabled={newSymbol.trim().length !== 1 || inputSymbols.includes(newSymbol.trim())}
+                    title={
+                        newSymbol.trim().length !== 1
+                            ? "Enter a single character"
+                            : inputSymbols.includes(newSymbol.trim())
+                                ? "Symbol already exists"
+                                : "Add Symbol"
+                    }
+                >
+                    +
+                </button>
+            </div>
+
+            {/* DFA Transition Table */}
             <table className="min-w-full border border-gray-700">
                 <thead>
                     <tr>
@@ -69,9 +114,9 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                                 <td key={sym} className="border border-gray-700 px-2 py-1 text-center">
                                     <input
                                         type="text"
-                                        defaultValue={
+                                        value={
                                             table[state]?.[sym] !== undefined
-                                                ? `${table[state]?.[sym]}`
+                                                ? `${table[state][sym]}`
                                                 : ""
                                         }
                                         className="w-full bg-gray-700 text-white px-1 py-0.5 rounded"
@@ -80,7 +125,13 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                                             const newTable = { ...table };
                                             if (!newTable[state]) newTable[state] = {};
                                             const value = e.target.value;
-                                            newTable[state][sym] = value ? Number(value) : 0;
+                                            // Ensure that the input is a number
+                                            const num = value != "" ? Number(value) : Number.NaN;
+                                            if (!isNaN(num) && Number.isInteger(num) && num >= 0 && states.includes(num)) {
+                                                newTable[state][sym] = num;
+                                            } else {
+                                                delete newTable[state][sym];
+                                            }
                                             setTable(newTable);
                                         }}
                                     />
@@ -89,7 +140,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                             <td className="border border-gray-700 px-2 py-1 text-center">
                                 <input
                                     type="checkbox"
-                                    defaultChecked={acceptStates.includes(state)}
+                                    checked={acceptStates.includes(state)}
                                     className="w-4 h-4"
                                     onChange={(e) => {
                                         const checked = e.target.checked;
@@ -111,6 +162,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                                         setAcceptStates(acceptStates.filter((s) => s !== state));
                                     }}
                                     className="bg-red-800 text-white rounded-md px-2.5 py-0.5 font-bold w-full"
+                                    title="Delete State"
                                 >
                                     ✘
                                 </button>
@@ -121,11 +173,12 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                         <td className="border border-gray-700 px-2 py-1">
                             <button
                                 onClick={() => {
-                                    const newState = Math.max(...states) + 1;
+                                    const newState = states.length > 0 ? Math.max(...states) + 1 : 0;
                                     setStates([...states, newState]);
                                     setTable({ ...table, [newState]: {} });
                                 }}
                                 className="bg-blue-500 text-white rounded-md px-2.5 py-0.5 font-bold text-xl w-full"
+                                title="Add State"
                             >
                                 +
                             </button>
@@ -140,6 +193,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
             </table>
         </div>
     );
-};
+}
+
 
 export default DFAInputTable;
