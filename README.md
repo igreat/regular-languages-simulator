@@ -9,7 +9,7 @@
 - [x] Simulating DFA from UI
 - [x] Creating DFA from UI textual (direct json)
 - [x] Basic UI (React)
-- [ ] Creating DFA from UI textual (table ui)
+- [x] Creating DFA from UI textual (table ui)
 - [ ] Turn DFA into NFA
 - [ ] Creating DFA/NFA from UI drag and drop
 - [ ] Editing DFA/NFA from UI

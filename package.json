@@ -15,6 +15,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@babel/preset-typescript": "^7.24.7",
+    "@datastructures-js/queue": "^4.2.3",
     "@fontsource/inter": "^5.1.0",
     "@t3-oss/env-nextjs": "^0.10.1",
     "@types/d3": "^7.4.3",
