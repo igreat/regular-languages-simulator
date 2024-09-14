@@ -7,6 +7,7 @@ import type { DFAJson } from "../simulator/dfa";
 import { DFA } from "../simulator/dfa";
 import DFAGraph from "./DFAGraph";
 import { DFAJsonToDFAData } from "~/utils/utils";
+import DFAInputTable from "./DFAInputTable";
 import { useEffect, useState } from "react";
 import exampleDFAJson from "../../data/postfix_aba_dfa.json";
 
@@ -39,6 +40,11 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [dfa, input, currentState, inputPos]);
 
+  // Handle DFA changes from DFAInputTable
+  const handleDFAChange = (dfaJson: string) => {
+    setDFAJson(dfaJson);
+  };
+  
   return (<>
     <main className="flex flex-col items-center justify-center">
       <div className="flex flex-col md:flex-row justify-start px-4 py-2 gap-8">
@@ -63,6 +69,7 @@ export default function HomePage() {
           </button>
 
           {/* Text box to enter a custom DFA JSON */}
+          <DFAInputTable onDFAChange={handleDFAChange} initialDFA={exampleDFAJson} />
           <textarea
             className="p-1 text-blue-300 w-60 h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs"
             rows={10}
