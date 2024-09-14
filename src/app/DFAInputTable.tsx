@@ -75,7 +75,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                                                 : ""
                                         }
                                         className="w-full bg-gray-700 text-white px-1 py-0.5 rounded"
-                                        placeholder={`q${state}`}
+                                        placeholder={`${state}`}
                                         onChange={(e) => {
                                             const newTable = { ...table };
                                             if (!newTable[state]) newTable[state] = {};
@@ -110,13 +110,32 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                                         setStates(states.filter((s) => s !== state));
                                         setAcceptStates(acceptStates.filter((s) => s !== state));
                                     }}
-                                    className="bg-red-800 text-white rounded-md px-2.5 py-0.5"
+                                    className="bg-red-800 text-white rounded-md px-2.5 py-0.5 font-bold w-full"
                                 >
                                     ✘
                                 </button>
                             </td>
                         </tr>
                     ))}
+                    <tr>
+                        <td className="border border-gray-700 px-2 py-1">
+                            <button
+                                onClick={() => {
+                                    const newState = Math.max(...states) + 1;
+                                    setStates([...states, newState]);
+                                    setTable({ ...table, [newState]: {} });
+                                }}
+                                className="bg-blue-500 text-white rounded-md px-2.5 py-0.5 font-bold text-xl w-full"
+                            >
+                                +
+                            </button>
+                        </td>
+                        {inputSymbols.map((sym) => (
+                            <td key={sym} className="border border-gray-700 px-2 py-1"></td>
+                        ))}
+                        <td className="border border-gray-700 px-2 py-1"></td>
+                        <td className="border border-gray-700 px-2 py-1"></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
