@@ -32,7 +32,6 @@ describe("Loading and saving DFA", () => {
     });
 
     test("Serialize DFA to JSON string", () => {
-        console.log(JSON.stringify(dfa.toJSON()));
         expect(
             JSON.stringify(dfa.toJSON()).replace(/\s/g, ""))
             .toBe(jsonString.replace(/\s/g, "")

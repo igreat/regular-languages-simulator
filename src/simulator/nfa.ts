@@ -62,6 +62,13 @@ class NFA {
         dfs(state);
         return Array.from(closure);
     }
+
+    toJSON(): NFAJson {
+        return {
+            acceptStates: Array.from(this.acceptStates),
+            table: this.table
+        };
+    }
 }
 
 
