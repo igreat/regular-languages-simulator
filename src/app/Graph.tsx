@@ -5,7 +5,7 @@ import * as d3 from "d3";
 import { curvePath, getBezierMidpoint, rotatePoint } from "../utils/utils";
 import type { GraphData } from "../utils/utils";
 
-export default function DFAGraph({
+export default function Graph({
   data,
   activeNodes,
 }: {
@@ -84,8 +84,8 @@ function setupSimulation(data: GraphData) {
     .force("collide", d3.forceCollide().radius(20))
     .force("center", d3.forceCenter().strength(1))
     .force("charge", d3.forceManyBody().strength(-150))
-    .force("y", d3.forceY().strength(0.01))
-    .force("x", d3.forceX().strength(0.01));
+    .force("y", d3.forceY().strength(0.02))
+    .force("x", d3.forceX().strength(0.02));
 }
 
 function renderLinks(

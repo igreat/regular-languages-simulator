@@ -2,47 +2,47 @@
 import '~/styles/globals.css';
 
 import type { GraphData } from "../utils/utils";
-import type { DFAJson } from "../simulator/dfa";
 
-import { DFA } from "../simulator/dfa";
-import DFAGraph from "./DFAGraph";
-import { DFAJsonToGraphData } from "~/utils/utils";
-import DFAInputTable from "./DFAInputTable";
 import { useEffect, useState } from "react";
+import Graph from "./Graph";
+import DFAInputTable from "./DFAInputTable";
+import { NFA, NFAJson } from '~/simulator/nfa';
+import { NFAJsonToGraphData } from "../utils/utils";
 import exampleDFAJson from "../../data/postfix_aba_dfa.json";
+import exampleNFAJson from "../../data/even_0s_or_1s_nfa.json";
 
 export default function HomePage() {
-  const [currentState, setCurrentState] = useState<number | null>(null);
+  const [currentStates, setCurrentStates] = useState<number[]>([]);
+  const [simulation, setSimulation] = useState<Generator<number[], boolean> | null>(null);
   const [input, setInput] = useState<string>("");
   const [inputPos, setInputPos] = useState<number>(0);
-  const [dfaJson, setDFAJson] = useState<string>(
-    JSON.stringify(exampleDFAJson, null, 2)
+  const [nfaJson, setNFAJson] = useState<string>(
+    JSON.stringify(exampleNFAJson, null, 2)
   );
-  const [dfa, setDFA] = useState<DFA | null>(
-    new DFA(exampleDFAJson.acceptStates, exampleDFAJson.table)
+  const [nfa, setNFA] = useState<NFA | null>(
+    new NFA(exampleNFAJson.acceptStates, exampleNFAJson.table)
   );
   const [data, setData] = useState<GraphData>(
-    DFAJsonToGraphData(exampleDFAJson as DFAJson)
+    NFAJsonToGraphData(exampleNFAJson as NFAJson)
   );
 
   useEffect(() => {
     const interval = setInterval(() => {
-      if (currentState === null || inputPos >= input.length) return;
-      setCurrentState((prev) => {
-        if (dfa && inputPos <= input.length) {
-          return dfa.run(input.charAt(inputPos), prev ?? 0) ?? null;
-        }
-        return null;
-      });
+      if (inputPos > input.length) return;
+      const nextStates = simulation?.next().value;
+      console.log(nextStates);
+      if (typeof nextStates === "boolean")
+        return;
+      setCurrentStates(nextStates ?? []);
       setInputPos((prev) => prev + 1);
-    }, 1000);
+    }, 500);
 
     return () => clearInterval(interval);
-  }, [dfa, input, currentState, inputPos]);
+  }, [nfa, input, currentStates, inputPos]);
 
   // Handle DFA changes from DFAInputTable
-  const handleDFAChange = (dfaJson: string) => {
-    setDFAJson(dfaJson);
+  const handleDFAChange = (nfaJson: string) => {
+    setNFAJson(nfaJson);
   };
 
   return (<>
@@ -50,7 +50,7 @@ export default function HomePage() {
       <div className="flex flex-col md:flex-row justify-start px-4 py-2 gap-8">
         {/* Simulation Part */}
         <div className="flex flex-col items-center justify-start gap-3">
-          <DFAGraph data={data} activeNodes={new Set(currentState ? [currentState] : [])} />
+          <Graph data={data} activeNodes={new Set(currentStates)} />
           <input
             type="text"
             value={input}
@@ -61,7 +61,10 @@ export default function HomePage() {
           <button
             onClick={() => {
               setInputPos(0);
-              setCurrentState(0);
+              setCurrentStates([]);
+              if (nfa) {
+                setSimulation(nfa.simulation(input));
+              }
             }}
             className="bg-cyan-900 text-white rounded-md py-1 px-2 text-sm font-bold border-2 border-cyan-800"
           >
@@ -74,20 +77,20 @@ export default function HomePage() {
             className="p-1 text-blue-300 w-60 h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs"
             rows={10}
             cols={50}
-            value={dfaJson}
+            value={nfaJson}
             onChange={(e) => {
-              setDFAJson(e.target.value);
+              setNFAJson(e.target.value);
             }}
           />
           <button
             onClick={() => {
-              const json = JSON.parse(dfaJson) as DFAJson;
-              setDFA(new DFA(json.acceptStates, json.table));
-              setData(DFAJsonToGraphData(json));
+              const json = JSON.parse(nfaJson) as NFAJson;
+              setNFA(new NFA(json.acceptStates, json.table));
+              setData(NFAJsonToGraphData(json));
             }}
             className="bg-cyan-900 text-white rounded-md py-1 px-2 text-sm font-bold border-2 border-cyan-800"
           >
-            Build DFA
+            Build NFA
           </button>
         </div>
 
@@ -99,7 +102,7 @@ export default function HomePage() {
             }}
             className="bg-blue-700 text-white font-bold rounded-md py-2 px-4 border-2 border-blue-600"
           >
-            Build Your Own DFA
+            Build Your Own NFA
           </button>
           <button
             onClick={() => {
@@ -107,7 +110,7 @@ export default function HomePage() {
             }}
             className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600"
           >
-            Load DFA
+            Load NFA
           </button>
         </div>
       </div>
