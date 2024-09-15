@@ -3,13 +3,14 @@
 import React, { useRef, useEffect } from "react";
 import * as d3 from "d3";
 import { curvePath, getBezierMidpoint, rotatePoint } from "../utils/utils";
+import type { GraphData } from "../utils/utils";
 
 export default function DFAGraph({
   data,
-  activeNode,
+  activeNodes,
 }: {
-  data: DFAData;
-  activeNode: number | null
+  data: GraphData;
+  activeNodes: Set<number>;
 }) {
   const ref = useRef<SVGSVGElement | null>(null);
 
@@ -50,9 +51,12 @@ export default function DFAGraph({
 
       svg
         .selectAll("circle")
-        .style("fill", (_, i) => (i === activeNode ? "red" : "#000"));
+        .style("fill", (_, i) => (activeNodes.has(i) ? "red" : "#000"))
+        // make border thicker for accept states
+        .attr("stroke-width", (_, i) => (data.acceptStates?.has(i) ? 3 : 2))
+        .attr("stroke", (_, i) => (data.acceptStates?.has(i) ? "lightgreen" : "#fff"));
     }
-  }, [activeNode]);
+  }, [activeNodes]);
 
   return <svg ref={ref}></svg>;
 }
@@ -73,7 +77,7 @@ function setupMarkers(svg: SVGSelection) {
     .attr("fill", "#aaa");
 }
 
-function setupSimulation(data: DFAData) {
+function setupSimulation(data: GraphData) {
   return d3
     .forceSimulation(data.nodes)
     .force("link", d3.forceLink(data.links).strength(0.005))
@@ -255,14 +259,6 @@ function dragended(
   event.subject.fy = null;
 }
 
-type DFAData = {
-  nodes: d3.SimulationNodeDatum[];
-  links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
-  nodeLabels: string[];
-  linkLabels: string[];
-  acceptStates?: number[];
-};
-
 type SVGSelection = d3.Selection<SVGSVGElement, unknown, null, undefined>;
 
 type NodeSelection = d3.Selection<
@@ -292,5 +288,3 @@ type LinkLabelSelection = d3.Selection<
   SVGGElement,
   unknown
 >;
-
-export type { DFAData };

@@ -1,10 +1,9 @@
-import type { DFAData } from "../app/DFAGraph";
 import type { DFAJson } from "../simulator/dfa";
-import { DFAJsonToDFAData } from "./utils";
+import { DFAJsonToGraphData, GraphData } from "./utils";
 
 describe("DFAJsonToDFAData", () => {
     let json: DFAJson;
-    let data: DFAData;
+    let data: GraphData;
     beforeAll(() => {
         json = {
             acceptStates: [3],
@@ -15,7 +14,7 @@ describe("DFAJsonToDFAData", () => {
                 3: { a: 1, b: 2 },
             },
         };
-        data = DFAJsonToDFAData(json);
+        data = DFAJsonToGraphData(json);
     });
 
     test("Correct number of nodes", () => {

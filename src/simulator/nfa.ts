@@ -46,6 +46,10 @@ class NFA {
         return curr.value;
     }
 
+    isAcceptState(state: number): boolean {
+        return this.acceptStates.has(state);
+    }
+
     // symbol for epsilon is "~"
     // this will skip all epsilon (aka, free) transitions
     epsilonClosure(state: number): number[] {

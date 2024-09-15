@@ -1,12 +1,12 @@
 "use client";
 import '~/styles/globals.css';
 
-import type { DFAData } from "./DFAGraph";
+import type { GraphData } from "../utils/utils";
 import type { DFAJson } from "../simulator/dfa";
 
 import { DFA } from "../simulator/dfa";
 import DFAGraph from "./DFAGraph";
-import { DFAJsonToDFAData } from "~/utils/utils";
+import { DFAJsonToGraphData } from "~/utils/utils";
 import DFAInputTable from "./DFAInputTable";
 import { useEffect, useState } from "react";
 import exampleDFAJson from "../../data/postfix_aba_dfa.json";
@@ -21,8 +21,8 @@ export default function HomePage() {
   const [dfa, setDFA] = useState<DFA | null>(
     new DFA(exampleDFAJson.acceptStates, exampleDFAJson.table)
   );
-  const [data, setData] = useState<DFAData>(
-    DFAJsonToDFAData(exampleDFAJson as DFAJson)
+  const [data, setData] = useState<GraphData>(
+    DFAJsonToGraphData(exampleDFAJson as DFAJson)
   );
 
   useEffect(() => {
@@ -44,13 +44,13 @@ export default function HomePage() {
   const handleDFAChange = (dfaJson: string) => {
     setDFAJson(dfaJson);
   };
-  
+
   return (<>
     <main className="flex flex-col items-center justify-center">
       <div className="flex flex-col md:flex-row justify-start px-4 py-2 gap-8">
         {/* Simulation Part */}
         <div className="flex flex-col items-center justify-start gap-3">
-          <DFAGraph data={data} activeNode={currentState} />
+          <DFAGraph data={data} activeNodes={new Set(currentState ? [currentState] : [])} />
           <input
             type="text"
             value={input}
@@ -83,7 +83,7 @@ export default function HomePage() {
             onClick={() => {
               const json = JSON.parse(dfaJson) as DFAJson;
               setDFA(new DFA(json.acceptStates, json.table));
-              setData(DFAJsonToDFAData(json));
+              setData(DFAJsonToGraphData(json));
             }}
             className="bg-cyan-900 text-white rounded-md py-1 px-2 text-sm font-bold border-2 border-cyan-800"
           >

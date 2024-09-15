@@ -1,8 +1,16 @@
-import type { DFAData } from "../app/DFAGraph";
 import type { DFAJson } from "../simulator/dfa";
+import type { NFAJson } from "~/simulator/nfa";
 import type * as d3 from "d3";
 
-export function DFAJsonToDFAData(data: DFAJson): DFAData {
+export type GraphData = {
+    nodes: d3.SimulationNodeDatum[];
+    links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
+    nodeLabels: string[];
+    linkLabels: string[];
+    acceptStates?: Set<number>;
+};
+
+export function DFAJsonToGraphData(data: DFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
     const nodeLabels: string[] = Object.keys(data.table);
     const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
@@ -14,7 +22,7 @@ export function DFAJsonToDFAData(data: DFAJson): DFAData {
         }
     }
 
-    return { nodes, links, nodeLabels, linkLabels, acceptStates: data.acceptStates };
+    return { nodes, links, nodeLabels, linkLabels, acceptStates: new Set(data.acceptStates) };
 }
 
 export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
