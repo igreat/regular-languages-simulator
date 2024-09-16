@@ -1,7 +1,7 @@
 import type { DFAJson } from "~/simulator/dfa";
 import type { NFAJson } from "~/simulator/nfa";
 import type { GraphData } from "./utils";
-import { DFAJsonToGraphData, NFAJsonToGraphData } from "./utils";
+import { DFAJsonToGraphData, getNodeToIndexMap, NFAJsonToGraphData } from "./utils";
 
 describe("DFAJsonToDFAData", () => {
     let json: DFAJson;
@@ -52,6 +52,7 @@ describe("DFAJsonToDFAData", () => {
 describe("NFAJsonToGraphData", () => {
     let json: NFAJson;
     let data: GraphData;
+    let nodeToIndex: Map<number, number>;
     beforeAll(() => {
         json = {
             acceptStates: [1, 3],
@@ -64,6 +65,7 @@ describe("NFAJsonToGraphData", () => {
             },
         };
         data = NFAJsonToGraphData(json);
+        nodeToIndex = getNodeToIndexMap(json);
     });
 
     test("Correct number of nodes", () => {
@@ -84,16 +86,16 @@ describe("NFAJsonToGraphData", () => {
 
     test("Correct links", () => {
         expect(data.links).toEqual([
-            { source: 0, target: 1 },
-            { source: 0, target: 3 },
-            { source: 1, target: 2 },
-            { source: 1, target: 1 },
-            { source: 2, target: 1 },
-            { source: 2, target: 2 },
-            { source: 3, target: 3 },
-            { source: 3, target: 4 },
-            { source: 4, target: 4 },
-            { source: 4, target: 3 },
+            { source: nodeToIndex.get(0), target: nodeToIndex.get(1) },
+            { source: nodeToIndex.get(0), target: nodeToIndex.get(3) },
+            { source: nodeToIndex.get(1), target: nodeToIndex.get(2) },
+            { source: nodeToIndex.get(1), target: nodeToIndex.get(1) },
+            { source: nodeToIndex.get(2), target: nodeToIndex.get(1) },
+            { source: nodeToIndex.get(2), target: nodeToIndex.get(2) },
+            { source: nodeToIndex.get(3), target: nodeToIndex.get(3) },
+            { source: nodeToIndex.get(3), target: nodeToIndex.get(4) },
+            { source: nodeToIndex.get(4), target: nodeToIndex.get(4) },
+            { source: nodeToIndex.get(4), target: nodeToIndex.get(3) },
         ]);
     });
 });

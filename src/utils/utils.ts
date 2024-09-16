@@ -39,39 +39,49 @@ export function DFAJsonToGraphData(data: DFAJson): GraphData {
     return { nodes, links, nodeLabels, linkLabels, acceptStates: new Set(data.acceptStates) };
 }
 
+export function getNodeToIndexMap(data: NFAJson): Map<number, number> {
+    let index = 0;
+    const nodeToIndex = new Map<number, number>();
+    for (const node of Object.keys(data.table)) {
+        nodeToIndex.set(Number(node), index);
+        index++;
+    } 
+    return nodeToIndex;
+}
+
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
-    const nodeLabels: string[] = Object.keys(data.table);
-    const nodeToIndex = new Map<number, number>();
+    const nodeToIndex = getNodeToIndexMap(data);
     let index = 0;
     // multiple of the same link can have different symbols, so the linkLabel should just be one comma separated string
     const srcToTarget = new Map<number, Map<number, string[]>>();
     for (const [source, targets] of Object.entries(data.table)) {
-        if (!nodeToIndex.has(Number(source))) {
-            nodeToIndex.set(Number(source), index++);
-            srcToTarget.set(Number(source), new Map());
+        const src = Number(source);
+        const srcIndex = nodeToIndex.get(src) ?? 0;
+        if (!srcToTarget.has(src)) {
+            srcToTarget.set(srcIndex, new Map());
         }
-        const srcIndex = nodeToIndex.get(Number(source)) ?? 0;
         for (const [symbol, target] of Object.entries(targets)) {
-            target.forEach((t) => {
-                if (!nodeToIndex.has(Number(t))) {
-                    nodeToIndex.set(Number(t), index++);
-                    srcToTarget.set(Number(t), new Map());
-                }
-                const tgtIndex = nodeToIndex.get(Number(t)) ?? 0;
+            target.forEach((tgt) => {
+                const tgtIndex = nodeToIndex.get(tgt) ?? 0;
                 if (!srcToTarget.get(srcIndex)?.has(tgtIndex)) {
                     srcToTarget.get(srcIndex)?.set(tgtIndex, []);
                 }
-                srcToTarget.get(srcIndex)?.get(t)?.push(symbol);
+                srcToTarget.get(srcIndex)?.get(tgtIndex)?.push(symbol);
             });
         }
+    }
+    
+    const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
+    for (const [node, index] of nodeToIndex) {
+        nodeLabels[index] = node.toString()
     }
 
     const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
     const linkLabels: string[] = [];
     for (const [source, targets] of srcToTarget) {
         for (const [target, symbols] of targets) {
-            links.push({ source: Number(source), target: target });
+            links.push({ source: source, target: target });
             linkLabels.push(symbols.join(" | "));
         }
     }
