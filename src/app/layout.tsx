@@ -2,6 +2,7 @@ import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
+import { Analytics } from '@vercel/analytics/react';
 
 import Link from "next/link";
 
@@ -34,7 +35,10 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${GeistSans.variable}`}>
-      <body className="flex flex-col gap-4"><TopNav />{children}</body>
+      <body className="flex flex-col gap-4">
+        <TopNav />{children}
+        <Analytics />
+        </body>
     </html>
   );
 }

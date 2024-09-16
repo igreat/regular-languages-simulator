@@ -66,6 +66,56 @@ class NFA {
         return states.some((state) => this.isAcceptState(state));
     }
 
+    // returns true if both NFAs have the same language
+    equals(other: NFA): boolean {
+        const symbols = new Set<string>([...this.symbols, ...other.symbols]);
+        symbols.delete("~");
+
+        // memoization map
+        const memo = new Map<string, boolean>();
+        const inCall = new Set<string>();
+
+        const isEqualPath = (node1: number, node2: number): boolean => {
+            const key = `${node1},${node2}`;
+            if (memo.has(key))
+                return memo.get(key) ?? false;
+        
+            if (inCall.has(key))
+                return false;
+
+            inCall.add(key);
+            for (const symbol of symbols) {
+                const transitions1 = this.getNextStates(node1, symbol);
+                const transitions2 = other.getNextStates(node2, symbol);
+
+                const accept1 = this.containsAcceptState(transitions1);
+                const accept2 = this.containsAcceptState(transitions2);
+
+                if (accept1 != accept2) {
+                    memo.set(key, false);
+                    inCall.delete(key);
+                    return false;
+                }
+
+                for (const n1 of transitions1) {
+                    for (const n2 of transitions2) {
+                        if (isEqualPath(n1, n2)) {
+                            memo.set(key, true);
+                            inCall.delete(key);
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            memo.set(key, false);
+            inCall.delete(key);
+            return false;
+        }
+
+        return isEqualPath(0, 0);
+    }
+
     // symbol for epsilon is "~"
     // this will skip all epsilon (aka, free) transitions
     epsilonClosure(state: number): number[] {
@@ -83,51 +133,12 @@ class NFA {
         return Array.from(closure);
     }
 
-    // returns true if both NFAs have the same language
-    equals(other: NFA): boolean {
-        const visited = new Map<number, Set<number>>(
-            this.states.map(state => [state, new Set<number>()])
+    getNextStates(state: number, symbol: string): number[] {
+        return Array.from(
+            new Set(
+                this.table[state]?.[symbol]?.flatMap(next => this.epsilonClosure(next)) ?? []
+            )
         );
-
-        const isEqualPath = (node1: number, node2: number): boolean => {
-            if (this.isAcceptState(node1) != this.isAcceptState(node2))
-                return false;
-            if (visited.get(node1)?.has(node2))
-                return true;
-            visited.get(node1)?.add(node2);
-
-            for (const symbol of this.symbols) {
-                const transitions1 = this.table[node1]?.[symbol]?.flatMap(next1 => this.epsilonClosure(next1)) ?? [];
-                const transitions2 = other.table[node2]?.[symbol]?.flatMap(next2 => other.epsilonClosure(next2)) ?? [];
-
-                for (const n1 of transitions1) {
-                    let matchFound = true;
-                    for (const n2 of transitions2) {
-                        if (isEqualPath(n1, n2)) {
-                            matchFound = true;
-                            break;
-                        }
-                    }
-                    if (!matchFound)
-                        return false;
-                }
-
-                for (const n2 of transitions2) {
-                    let matchFound = true;
-                    for (const n1 of transitions1) {
-                        if (isEqualPath(n1, n2)) {
-                            matchFound = true;
-                            break;
-                        }
-                    }
-                    if (!matchFound)
-                        return false;
-                }
-            }
-            return true;
-        }
-
-        return isEqualPath(0, 0);
     }
 
     toJSON(): NFAJson {

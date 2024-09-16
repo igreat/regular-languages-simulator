@@ -110,10 +110,11 @@ describe("Two NFAs that determine if input contains 'aba' suffix should be equal
     let nfa2: NFA;
 
     beforeAll(() => {
-        nfa1 = new NFA([3], {
-            0: { a: [0, 1], b: [0] },
-            1: { b: [2] },
-            2: { a: [2] }
+        nfa1 = new NFA([4], {
+            0: { "~": [1], a: [0], b: [0] },
+            1: { a: [2] },
+            2: { b: [3] },
+            3: { a: [4] },
         });
 
         nfa2 = new NFA([3], {
@@ -124,7 +125,31 @@ describe("Two NFAs that determine if input contains 'aba' suffix should be equal
         });
     });
 
-    test("Both NFAs should accept the same strings", () => {
+    test("Both NFAs should accept the same language", () => {
+        expect(nfa1.equals(nfa2)).toBe(true);
+    });
+});
+
+describe("Two other NFAs that determine if input contains 'aba' suffix should be equal", () => {
+    let nfa1: NFA;
+    let nfa2: NFA;
+
+    beforeAll(() => {
+        nfa1 = new NFA([3], {
+            0: { a: [1], b: [0] },
+            1: { a: [1], b: [2] },
+            2: { a: [3], b: [0] },
+            3: { a: [1], b: [2] }
+        });
+
+        nfa2 = new NFA([3], {
+            0: { a: [0, 1], b: [0] },
+            1: { b: [2] },
+            2: { a: [3] }
+        });
+    });
+
+    test("Both NFAs should accept the same language", () => {
         expect(nfa1.equals(nfa2)).toBe(true);
     });
 });
@@ -137,17 +162,18 @@ describe("NFA that determine if input contains 'aba' suffix should not be equal 
         nfa1 = new NFA([3], {
             0: { a: [0, 1], b: [0] },
             1: { b: [2] },
-            2: { a: [2] }
+            2: { a: [3] }
         });
 
         nfa2 = new NFA([3], {
             0: { a: [0], b: [0, 1] },
             1: { a: [2] },
-            2: { b: [2] }
+            2: { b: [3] }
         });
     });
 
-    test("Both NFAs should accept the same strings", () => {
-        expect(nfa1.equals(nfa2)).toBe(true);
+    test("NFAs should not accept the same language", () => {
+        expect(nfa1.equals(nfa2)).toBe(false);
     });
 });
+
