@@ -104,3 +104,50 @@ describe("NFA that determines if input contains an even number of 0s or an even 
         expect(nfa.accepts("10")).toBe(false);
     });
 });
+
+describe("Two NFAs that determine if input contains 'aba' suffix should be equal", () => {
+    let nfa1: NFA;
+    let nfa2: NFA;
+
+    beforeAll(() => {
+        nfa1 = new NFA([3], {
+            0: { a: [0, 1], b: [0] },
+            1: { b: [2] },
+            2: { a: [2] }
+        });
+
+        nfa2 = new NFA([3], {
+            0: { a: [1], b: [0] },
+            1: { a: [1], b: [2] },
+            2: { a: [3], b: [0] },
+            3: { a: [1], b: [2] }
+        });
+    });
+
+    test("Both NFAs should accept the same strings", () => {
+        expect(nfa1.equals(nfa2)).toBe(true);
+    });
+});
+
+describe("NFA that determine if input contains 'aba' suffix should not be equal to 'bab' suffix", () => {
+    let nfa1: NFA;
+    let nfa2: NFA;
+
+    beforeAll(() => {
+        nfa1 = new NFA([3], {
+            0: { a: [0, 1], b: [0] },
+            1: { b: [2] },
+            2: { a: [2] }
+        });
+
+        nfa2 = new NFA([3], {
+            0: { a: [0], b: [0, 1] },
+            1: { a: [2] },
+            2: { b: [2] }
+        });
+    });
+
+    test("Both NFAs should accept the same strings", () => {
+        expect(nfa1.equals(nfa2)).toBe(true);
+    });
+});

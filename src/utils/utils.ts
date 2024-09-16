@@ -52,7 +52,6 @@ export function getNodeToIndexMap(data: NFAJson): Map<number, number> {
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
     const nodeToIndex = getNodeToIndexMap(data);
-    let index = 0;
     // multiple of the same link can have different symbols, so the linkLabel should just be one comma separated string
     const srcToTarget = new Map<number, Map<number, string[]>>();
     for (const [source, targets] of Object.entries(data.table)) {
