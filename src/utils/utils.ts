@@ -13,12 +13,26 @@ export type GraphData = {
 export function DFAJsonToGraphData(data: DFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
     const nodeLabels: string[] = Object.keys(data.table);
-    const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
-    const linkLabels: string[] = [];
+    // multiple of the same link can have different symbols, so the linkLabel should just be one comma separated string
+    const srcToTarget = new Map<number, Map<number, string[]>>();
     for (const [source, targets] of Object.entries(data.table)) {
         for (const [symbol, target] of Object.entries(targets)) {
-            links.push({ source: Number(source), target });
-            linkLabels.push(symbol);
+            if (!srcToTarget.has(Number(source))) {
+                srcToTarget.set(Number(source), new Map());
+            }
+            if (!srcToTarget.get(Number(source))?.has(target)) {
+                srcToTarget.get(Number(source))?.set(target, []);
+            }
+            srcToTarget.get(Number(source))?.get(target)?.push(symbol);
+        }
+    }
+
+    const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
+    const linkLabels: string[] = [];
+    for (const [source, targets] of srcToTarget) {
+        for (const [target, symbols] of targets) {
+            links.push({ source: Number(source), target: target });
+            linkLabels.push(symbols.join(","));
         }
     }
 
@@ -28,14 +42,28 @@ export function DFAJsonToGraphData(data: DFAJson): GraphData {
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
     const nodeLabels: string[] = Object.keys(data.table);
-    const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
-    const linkLabels: string[] = [];
+    // multiple of the same link can have different symbols, so the linkLabel should just be one comma separated string
+    const srcToTarget = new Map<number, Map<number, string[]>>();
     for (const [source, targets] of Object.entries(data.table)) {
         for (const [symbol, target] of Object.entries(targets)) {
             target.forEach((t) => {
-                links.push({ source: Number(source), target: t });
-                linkLabels.push(symbol);
+                if (!srcToTarget.has(Number(source))) {
+                    srcToTarget.set(Number(source), new Map());
+                }
+                if (!srcToTarget.get(Number(source))?.has(t)) {
+                    srcToTarget.get(Number(source))?.set(t, []);
+                }
+                srcToTarget.get(Number(source))?.get(t)?.push(symbol);
             });
+        }
+    }
+
+    const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
+    const linkLabels: string[] = [];
+    for (const [source, targets] of srcToTarget) {
+        for (const [target, symbols] of targets) {
+            links.push({ source: Number(source), target: target });
+            linkLabels.push(symbols.join(" | "));
         }
     }
 
