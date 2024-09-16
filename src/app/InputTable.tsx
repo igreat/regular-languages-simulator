@@ -133,7 +133,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                         type="text"
                                         value={tableText[state]?.[sym] ?? ""}
                                         className="w-full bg-gray-700 text-white px-1 py-0.5 rounded"
-                                        placeholder={`${state}`}
+                                        placeholder={`∅`}
                                         onChange={(e) => {
                                             const newTableText = { ...tableText };
                                             if (!newTableText[state]) newTableText[state] = {};
@@ -170,7 +170,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                     }}
                                 />
                             </td>
-                            <td className="border border-gray-700 px-2 py-1 text-center">
+                            <td className="bg-red-800 border border-gray-700 px-2 py-1 text-center">
                                 <button
                                     onClick={() => {
                                         const newTableText = { ...tableText };
@@ -195,7 +195,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                             }
                                         }
                                     }}
-                                    className="bg-red-800 text-white rounded-md px-2.5 py-0.5 font-bold w-full"
+                                    className="text-white px-0.5 font-bold w-full"
                                     title="Delete State"
                                 >
                                     ✘
@@ -204,7 +204,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                         </tr>
                     ))}
                     <tr>
-                        <td className="border border-gray-700 px-2 py-1">
+                        <td className="bg-blue-500 border border-gray-700">
                             <button
                                 onClick={() => {
                                     const newState = states.length > 0 ? Math.max(...states) + 1 : 0;
@@ -216,7 +216,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                     const newTableText = { ...tableText };
                                     newTableText[newState] = {};
                                 }}
-                                className="bg-blue-500 text-white rounded-md px-2.5 py-0.5 font-bold text-xl w-full"
+                                className="text-white px-0.5 font-bold text-xl w-full"
                                 title="Add State"
                             >
                                 +
@@ -228,6 +228,41 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                         <td className="border border-gray-700 px-2 py-1"></td>
                         <td className="border border-gray-700 px-2 py-1"></td>
                     </tr>
+                    {/* delete symbol row  */}
+                    <tr>
+                        <td className="border border-gray-700 px-2 py-1"></td>
+                        {inputSymbols.map((sym) => (
+                            <td key={sym} className="bg-red-800 border border-black">
+                                <button
+                                    onClick={() => {
+                                        const newInputSymbols = inputSymbols.filter((s) => s !== sym);
+                                        setInputSymbols(newInputSymbols);
+                                        const newTable = { ...table };
+                                        for (const state in newTable) {
+                                            if (newTable[state]) {
+                                                delete newTable[state][sym];
+                                            }
+                                        }
+                                        setTable(newTable);
+                                        const newTableText = { ...tableText };
+                                        for (const state in newTableText) {
+                                            if (newTableText[state]) {
+                                                delete newTableText[state][sym];
+                                            }
+                                        }
+                                        setTableText(newTableText);
+                                    }}
+                                    className=" text-white px-0.5 font-bold w-full"
+                                    title="Delete Symbol"
+                                >
+                                    ✘
+                                </button>
+                            </td>
+                        ))}
+                        <td className="border border-gray-700 px-2 py-1"></td>
+                        <td className="border border-gray-700 px-2 py-1"></td>
+                    </tr>
+
                 </tbody>
             </table>
             {inputError && <p className="text-red-500 mt-2">{inputError}</p>}
