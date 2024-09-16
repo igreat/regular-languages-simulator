@@ -2,11 +2,13 @@
 import '~/styles/globals.css';
 
 import type { GraphData } from "../utils/utils";
+import type { NFAJson } from '~/simulator/nfa';
 
 import { useEffect, useState } from "react";
 import Graph from "./Graph";
 import DFAInputTable from "./DFAInputTable";
-import { NFA, NFAJson } from '~/simulator/nfa';
+import InputTable from "./InputTable";
+import { NFA } from '~/simulator/nfa';
 import { NFAJsonToGraphData } from "../utils/utils";
 import exampleDFAJson from "../../data/postfix_aba_dfa.json";
 import exampleNFAJson from "../../data/even_0s_or_1s_nfa.json";
@@ -38,10 +40,10 @@ export default function HomePage() {
     }, 500);
 
     return () => clearInterval(interval);
-  }, [nfa, input, currentStates, inputPos]);
+  }, [nfa, input, currentStates, inputPos, simulation]);
 
   // Handle DFA changes from DFAInputTable
-  const handleDFAChange = (nfaJson: string) => {
+  const handleNFAChange = (nfaJson: string) => {
     setNFAJson(nfaJson);
   };
 
@@ -98,7 +100,7 @@ export default function HomePage() {
           {/* DFA Input Table Section (2/3) */}
           <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
             {/* Text box to enter a custom DFA JSON */}
-            <DFAInputTable onDFAChange={handleDFAChange} initialDFA={exampleDFAJson} />
+            <InputTable onNFAChange={handleNFAChange} initialNFA={exampleNFAJson} />
             <textarea
               className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm resize-none"
               rows={10}

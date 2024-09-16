@@ -56,7 +56,7 @@ export default function Graph({
         .attr("stroke-width", (_, i) => (data.acceptStates?.has(i) ? 3 : 2))
         .attr("stroke", (_, i) => (data.acceptStates?.has(i) ? "lightgreen" : "#fff"));
     }
-  }, [activeNodes]);
+  }, [activeNodes, data.acceptStates]);
 
   return <svg ref={ref}></svg>;
 }

@@ -1,6 +1,7 @@
 import type { DFAJson } from "~/simulator/dfa";
 import type { NFAJson } from "~/simulator/nfa";
-import { DFAJsonToGraphData, NFAJsonToGraphData, GraphData } from "./utils";
+import type { GraphData } from "./utils";
+import { DFAJsonToGraphData, NFAJsonToGraphData } from "./utils";
 
 describe("DFAJsonToDFAData", () => {
     let json: DFAJson;
