@@ -45,79 +45,91 @@ export default function HomePage() {
     setNFAJson(nfaJson);
   };
 
-  return (<>
-    <main className="flex flex-col items-center justify-center">
-      <div className="flex flex-col md:flex-row justify-start px-4 py-2 gap-8">
-        {/* Simulation Part */}
-        <div className="flex flex-col items-center justify-start gap-3">
-          <Graph data={data} activeNodes={new Set(currentStates)} />
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Enter input string"
-            className="p-1 text-blue-300 w-64 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs"
-          />
-          <button
-            onClick={() => {
-              setInputPos(0);
-              setCurrentStates([]);
-              if (nfa) {
-                setSimulation(nfa.simulation(input));
-              }
-            }}
-            className="bg-cyan-900 text-white rounded-md py-1 px-2 text-sm font-bold border-2 border-cyan-800"
-          >
-            Simulate
-          </button>
+  return (
+    <>
+      <main className="flex flex-col items-center justify-center w-full px-6">
+        <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
+          {/* NFA and Buttons Section (1/3) */}
+          <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
+            {/* Simulation Part */}
+            <Graph data={data} activeNodes={new Set(currentStates)} />
+            <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Enter input string"
+                className="p-2 text-blue-300 w-full sm:w-2/3 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm"
+              />
+              <button
+                onClick={() => {
+                  setInputPos(0);
+                  setCurrentStates([]);
+                  if (nfa) {
+                    setSimulation(nfa.simulation(input));
+                  }
+                }}
+                className="bg-cyan-900 text-white rounded-md py-2 text-sm font-bold border-2 border-cyan-800 w-full sm:w-1/3"
+              >
+                Simulate
+              </button>
+            </div>
+            {/* Buttons Below */}
+            <div className="flex flex-row justify-center gap-4 w-full">
+              <button
+                onClick={() => {
+                  // Navigate or open the "Build Your Own DFA" page/modal
+                }}
+                className="bg-blue-700 text-white font-bold rounded-md py-2 px-4 border-2 border-blue-600 flex-1 sm:flex-none"
+              >
+                Save NFA
+              </button>
+              <button
+                onClick={() => {
+                  // Open file dialog or navigate to "Load DFA" functionality
+                }}
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+              >
+                Load NFA
+              </button>
+            </div>
+          </div>
 
-          {/* Text box to enter a custom DFA JSON */}
-          <DFAInputTable onDFAChange={handleDFAChange} initialDFA={exampleDFAJson} />
-          <textarea
-            className="p-1 text-blue-300 w-60 h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs"
-            rows={10}
-            cols={50}
-            value={nfaJson}
-            onChange={(e) => {
-              setNFAJson(e.target.value);
-            }}
-          />
-          <button
-            onClick={() => {
-              const json = JSON.parse(nfaJson) as NFAJson;
-              setNFA(new NFA(json.acceptStates, json.table));
-              setData(NFAJsonToGraphData(json));
-            }}
-            className="bg-cyan-900 text-white rounded-md py-1 px-2 text-sm font-bold border-2 border-cyan-800"
-          >
-            Build NFA
-          </button>
+          {/* DFA Input Table Section (2/3) */}
+          <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
+            {/* Text box to enter a custom DFA JSON */}
+            <DFAInputTable onDFAChange={handleDFAChange} initialDFA={exampleDFAJson} />
+            <textarea
+              className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm resize-none"
+              rows={10}
+              cols={50}
+              value={nfaJson}
+              onChange={(e) => {
+                setNFAJson(e.target.value);
+              }}
+            />
+            <button
+              onClick={() => {
+                try {
+                  const json = JSON.parse(nfaJson) as NFAJson;
+                  setNFA(new NFA(json.acceptStates, json.table));
+                  setData(NFAJsonToGraphData(json));
+                } catch (error) {
+                  console.error("Invalid JSON:", error);
+                  // Optionally, add user feedback for invalid JSON
+                }
+              }}
+              className="bg-cyan-900 text-white rounded-md py-2 px-4 text-sm font-bold border-2 border-cyan-800 w-full"
+            >
+              Build NFA
+            </button>
+          </div>
         </div>
-
-        {/* Buttons on the Right */}
-        <div className="flex flex-col md:justify-center pb-28 gap-4 text-xl">
-          <button
-            onClick={() => {
-              // Navigate or open the "Build Your Own DFA" page/modal
-            }}
-            className="bg-blue-700 text-white font-bold rounded-md py-2 px-4 border-2 border-blue-600"
-          >
-            Build Your Own NFA
-          </button>
-          <button
-            onClick={() => {
-              // Open file dialog or navigate to "Load DFA" functionality
-            }}
-            className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600"
-          >
-            Load NFA
-          </button>
-        </div>
-      </div>
-    </main>
-    <footer>
-      {/* basic padding for now */}
-      <div className="py-16"></div>
-    </footer>
-  </>);
+      </main>
+      <footer>
+        {/* Basic padding for now */}
+        <div className="py-16"></div>
+      </footer>
+    </>
+  );
 }

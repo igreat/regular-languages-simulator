@@ -61,7 +61,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
     }
 
     return (
-        <div className="p-4 bg-gray-800 text-white rounded-md w-full max-w-md overflow-x-auto">
+        <div className="p-4 bg-gray-800 text-white rounded-md w-full overflow-x-auto">
             {/* Section to add a new input symbol */}
             <div className="flex items-center mb-4">
                 <input
@@ -100,7 +100,7 @@ function DFAInputTable({ onDFAChange, initialDFA }: DFAInputTableProps) {
                             </th>
                         ))}
                         <th className="border border-gray-700 px-2 py-1">Accept</th>
-                        <th className="border border-gray-700 px-2 py-1">Delete</th>
+                        <th className="border border-gray-700 px-2 py-1"></th>
                     </tr>
                 </thead>
                 <tbody>

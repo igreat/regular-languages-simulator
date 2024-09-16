@@ -16,9 +16,9 @@ export default function Graph({
 
   useEffect(() => {
     const svg = d3.select(ref.current) as SVGSelection;
-    const width = 350;
-    const height = 300;
-    const margin = { top: 5, right:  15, bottom: 5, left: 15 };
+    const width = 450;
+    const height = 400;
+    const margin = { top: 5, right:  5, bottom: 5, left: 5 };
 
     svg.selectAll("*").remove();
 
@@ -80,10 +80,10 @@ function setupMarkers(svg: SVGSelection) {
 function setupSimulation(data: GraphData) {
   return d3
     .forceSimulation(data.nodes)
-    .force("link", d3.forceLink(data.links).strength(0.005))
+    .force("link", d3.forceLink(data.links).strength(0.01))
     .force("collide", d3.forceCollide().radius(20))
     .force("center", d3.forceCenter().strength(1))
-    .force("charge", d3.forceManyBody().strength(-150))
+    .force("charge", d3.forceManyBody().strength(-120))
     .force("y", d3.forceY().strength(0.02))
     .force("x", d3.forceX().strength(0.02));
 }
