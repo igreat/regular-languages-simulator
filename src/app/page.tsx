@@ -114,6 +114,9 @@ export default function HomePage() {
                   const json = JSON.parse(nfaJson) as NFAJson;
                   setNFA(new NFA(json.acceptStates, json.table));
                   setData(NFAJsonToGraphData(json));
+                  setCurrentStates([]);
+                  setInputPos(0);
+                  setSimulation(null);
                 } catch (error) {
                   console.error("Invalid JSON:", error);
                   // Optionally, add user feedback for invalid JSON
