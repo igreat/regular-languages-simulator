@@ -18,7 +18,7 @@ export default function Graph({
     const svg = d3.select(ref.current) as SVGSelection;
     const width = 450;
     const height = 400;
-    const margin = { top: 5, right:  5, bottom: 5, left: 5 };
+    const margin = { top: 5, right: 5, bottom: 5, left: 5 };
 
     svg.selectAll("*").remove();
 
@@ -51,10 +51,15 @@ export default function Graph({
 
       svg
         .selectAll("circle")
-        .style("fill", (_, i) => (activeNodes.has(i) ? "red" : "#000"))
-        // make border thicker for accept states
+        .style("fill", (_, i) => {
+          if (activeNodes.has(i)) {
+            return "red";
+          }
+          return i == 0 ? "#7f7f7f" : "#000";
+        })
         .attr("stroke-width", (_, i) => (data.acceptStates?.has(i) ? 3 : 2))
         .attr("stroke", (_, i) => (data.acceptStates?.has(i) ? "lightgreen" : "#fff"));
+
     }
   }, [activeNodes, data.acceptStates]);
 
