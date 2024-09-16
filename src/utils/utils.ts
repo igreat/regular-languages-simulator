@@ -42,18 +42,27 @@ export function DFAJsonToGraphData(data: DFAJson): GraphData {
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
     const nodeLabels: string[] = Object.keys(data.table);
+    const nodeToIndex = new Map<number, number>();
+    let index = 0;
     // multiple of the same link can have different symbols, so the linkLabel should just be one comma separated string
     const srcToTarget = new Map<number, Map<number, string[]>>();
     for (const [source, targets] of Object.entries(data.table)) {
+        if (!nodeToIndex.has(Number(source))) {
+            nodeToIndex.set(Number(source), index++);
+            srcToTarget.set(Number(source), new Map());
+        }
+        const srcIndex = nodeToIndex.get(Number(source)) ?? 0;
         for (const [symbol, target] of Object.entries(targets)) {
             target.forEach((t) => {
-                if (!srcToTarget.has(Number(source))) {
-                    srcToTarget.set(Number(source), new Map());
+                if (!nodeToIndex.has(Number(t))) {
+                    nodeToIndex.set(Number(t), index++);
+                    srcToTarget.set(Number(t), new Map());
                 }
-                if (!srcToTarget.get(Number(source))?.has(t)) {
-                    srcToTarget.get(Number(source))?.set(t, []);
+                const tgtIndex = nodeToIndex.get(Number(t)) ?? 0;
+                if (!srcToTarget.get(srcIndex)?.has(tgtIndex)) {
+                    srcToTarget.get(srcIndex)?.set(tgtIndex, []);
                 }
-                srcToTarget.get(Number(source))?.get(t)?.push(symbol);
+                srcToTarget.get(srcIndex)?.get(t)?.push(symbol);
             });
         }
     }
