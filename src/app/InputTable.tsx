@@ -33,6 +33,16 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
             setInputSymbols(Array.from(symbols));
             setAcceptStates(initialNFA.acceptStates);
             setTable(initialNFA.table);
+            const tableText: Record<number, Record<string, string>> = {};
+            for (const state in initialNFA.table) {
+                const stateTransitions = initialNFA.table[state] ?? {};
+                const transitions: Record<string, string> = {};
+                for (const symbol in stateTransitions) {
+                    transitions[symbol] = (stateTransitions[symbol] ?? []).join(",");
+                }
+                tableText[state] = transitions;
+            }
+            setTableText(tableText);
         } else {
             // Initialize with default DFA
             setStates([0]);
@@ -57,6 +67,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
             return;
         }
         setInputSymbols([...inputSymbols, sym]);
+        setNewSymbol(""); // Clear the input after adding
     };
 
     // Allow adding symbol by pressing Enter key
@@ -133,8 +144,12 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                                 const newTable = validateTableText(newTableText, statesSet);
                                                 setTable(newTable);
                                                 setInputError("");
-                                            } catch (e: any) {
-                                                setInputError(e.message);
+                                            } catch (error: unknown) {
+                                                if (error instanceof Error) {
+                                                    setInputError(error.message);
+                                                } else {
+                                                    setInputError("An unknown error occurred.");
+                                                }
                                             }
                                         }}
                                     />
@@ -158,12 +173,27 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                             <td className="border border-gray-700 px-2 py-1 text-center">
                                 <button
                                     onClick={() => {
-                                        const newTable = { ...table };
-                                        setStatesSet(new Set(states.filter((s) => s !== state)));
-                                        delete newTable[state];
-                                        setTable(newTable);
-                                        setStates(states.filter((s) => s !== state));
+                                        const newTableText = { ...tableText };
+                                        delete newTableText[state];
+                                        setTableText(newTableText);
+
+                                        const newStates = states.filter((s) => s !== state);
+                                        const newStatesSet = new Set(newStates);
+                                        setStates(newStates);
+                                        setStatesSet(newStatesSet);
                                         setAcceptStates(acceptStates.filter((s) => s !== state));
+
+                                        try {
+                                            const newTable = validateTableText(newTableText, newStatesSet);
+                                            setTable(newTable);
+                                            setInputError("");
+                                        } catch (error: unknown) {
+                                            if (error instanceof Error) {
+                                                setInputError(error.message);
+                                            } else {
+                                                setInputError("An unknown error occurred.");
+                                            }
+                                        }
                                     }}
                                     className="bg-red-800 text-white rounded-md px-2.5 py-0.5 font-bold w-full"
                                     title="Delete State"
@@ -178,9 +208,13 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                             <button
                                 onClick={() => {
                                     const newState = states.length > 0 ? Math.max(...states) + 1 : 0;
-                                    setStates([...states, newState]);
-                                    setStatesSet(new Set([...states, newState]));
+                                    const newStates = [...states, newState];
+                                    setStates(newStates);
+                                    setStatesSet(new Set(newStates));
                                     setTable({ ...table, [newState]: {} });
+                                    // Also add a new entry to tableText
+                                    const newTableText = { ...tableText };
+                                    newTableText[newState] = {};
                                 }}
                                 className="bg-blue-500 text-white rounded-md px-2.5 py-0.5 font-bold text-xl w-full"
                                 title="Add State"
@@ -199,6 +233,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
             {inputError && <p className="text-red-500 mt-2">{inputError}</p>}
         </div>
     );
+
 }
 
 function validateTableText(tableText: Record<number, Record<string, string>>, statesSet: Set<number>): NFATransitionTable {
@@ -210,21 +245,20 @@ function validateTableText(tableText: Record<number, Record<string, string>>, st
             let transition = stateTransitions[symbol];
             if (!transition) continue;
             // if last character is comma, remove it
-            if (transition[transition.length - 1] == ',') {
+            if (transition.endsWith(",")) {
                 transition = transition.slice(0, -1);
             }
-            const states = transition.split(",").map((s) => parseInt(s));
-            if (states?.some((s) => isNaN(s))) {
-                throw new Error(`Non numeric target state for state ${state} and symbol ${symbol}`);
-            } else if (states?.some((s) => !statesSet.has(s))) {
-                throw new Error(`Target state for state ${state} and symbol ${symbol} is not in the list of states`);
+            const states = transition.split(",").map((s) => parseInt(s.trim()));
+            if (states.some((s) => isNaN(s))) {
+                throw new Error(`Non-numeric target state for state ${state} and symbol "${symbol}".`);
+            } else if (states.some((s) => !statesSet.has(s))) {
+                throw new Error(`Target state for state ${state} and symbol "${symbol}" is not in the list of states.`);
             }
-            transitions[symbol] = states ?? [];
+            transitions[symbol] = states;
         }
         table[parseInt(state)] = transitions;
     }
     return table;
 }
-
 
 export default DFAInputTable;

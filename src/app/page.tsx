@@ -6,11 +6,9 @@ import type { NFAJson } from '~/simulator/nfa';
 
 import { useEffect, useState } from "react";
 import Graph from "./Graph";
-import DFAInputTable from "./DFAInputTable";
 import InputTable from "./InputTable";
 import { NFA } from '~/simulator/nfa';
 import { NFAJsonToGraphData } from "../utils/utils";
-import exampleDFAJson from "../../data/postfix_aba_dfa.json";
 import exampleNFAJson from "../../data/even_0s_or_1s_nfa.json";
 
 export default function HomePage() {
@@ -42,7 +40,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, [nfa, input, currentStates, inputPos, simulation]);
 
-  // Handle DFA changes from DFAInputTable
+  // Handle NFA changes from InputTable
   const handleNFAChange = (nfaJson: string) => {
     setNFAJson(nfaJson);
   };
@@ -51,7 +49,7 @@ export default function HomePage() {
     <>
       <main className="flex flex-col items-center justify-center w-full px-6">
         <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
-          {/* NFA and Buttons Section (1/3) */}
+          {/* NFA and Buttons Section*/}
           <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
             {/* Simulation Part */}
             <Graph data={data} activeNodes={new Set(currentStates)} />
@@ -80,7 +78,7 @@ export default function HomePage() {
             <div className="flex flex-row justify-center gap-4 w-full">
               <button
                 onClick={() => {
-                  // Navigate or open the "Build Your Own DFA" page/modal
+                  // Navigate or open the "Build Your Own" page/modal
                 }}
                 className="bg-blue-700 text-white font-bold rounded-md py-2 px-4 border-2 border-blue-600 flex-1 sm:flex-none"
               >
@@ -88,7 +86,7 @@ export default function HomePage() {
               </button>
               <button
                 onClick={() => {
-                  // Open file dialog or navigate to "Load DFA" functionality
+                  // Open file dialog or navigate to "Load" functionality
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -97,9 +95,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* DFA Input Table Section (2/3) */}
+          {/* Input Table Section */}
           <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
-            {/* Text box to enter a custom DFA JSON */}
+            {/* Text box to enter a custom NFA JSON */}
             <InputTable onNFAChange={handleNFAChange} initialNFA={exampleNFAJson} />
             <textarea
               className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm resize-none"
