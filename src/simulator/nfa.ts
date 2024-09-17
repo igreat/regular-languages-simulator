@@ -73,7 +73,35 @@ class NFA {
         const table: DFATransitionTable = {};
         const acceptStates = new Set<string>();
         const queue = new Queue<Set<string>>([this.epsilonClosure("0")]);
+        const visited = new Set<string>();
+        while (!queue.isEmpty()) {
+            const srcStates = queue.pop();
+            const srcKey = Array.from(srcStates).sort().join(",");
+            if (visited.has(srcKey))
+                continue;
 
+            if (this.containsAcceptState(Array.from(srcStates)))
+                acceptStates.add(srcKey);
+
+            table[srcKey] = {};
+            visited.add(srcKey);
+            const transitions: Record<string, Set<string>> = {};
+            for (const state of srcStates) {
+                if (!this.table[state])
+                    continue;
+                for (const [symbol, targets] of Object.entries(this.table[state])) {
+                    if (!transitions[symbol])
+                        transitions[symbol] = new Set<string>();
+                    targets.forEach((t) => { transitions[symbol]?.add(t); })
+                }
+            }
+
+            for (const [symbol, tgtStates] of Object.entries(transitions)) {
+                const tgtKey = Array.from(tgtStates).sort().join(",");
+                table[srcKey][symbol] = tgtKey;
+                queue.push(tgtStates);
+            }
+        }
 
         return new DFA(Array.from(acceptStates), table);
     }
@@ -95,12 +123,9 @@ class NFA {
         return closure;
     }
 
-    getNextStates(state: string, symbol: string): Set<string> {
-        const closure = new Set<string>();
-        for (const neighbor of this.table[state]?.[symbol] ?? []) {
-            this.epsilonClosure(neighbor).forEach((u) => closure.add(u));
-        }
-        return closure;
+    getStates(): string[] {
+        // return a copy of the states
+        return [...this.states];
     }
 
     toJSON(): NFAJson {

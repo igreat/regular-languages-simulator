@@ -26,6 +26,10 @@ class DFA {
         }
         return this.isAcceptState(state);
     }
+    
+    getStates(): string[] {
+        return Object.keys(this.table);
+    }
 
     toJSON(): DFAJson {
         return {
