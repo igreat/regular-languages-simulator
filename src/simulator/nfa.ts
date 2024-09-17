@@ -11,6 +11,7 @@ class NFA {
     constructor(acceptStates: string[], table: NFATransitionTable) {
         this.acceptStates = new Set(acceptStates);
         this.table = table;
+        console.assert("0" in this.table);
         this.states = [];
 
         const symbolSet = new Set<string>();

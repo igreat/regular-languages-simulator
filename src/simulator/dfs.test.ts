@@ -173,3 +173,76 @@ describe("DFA converts to equivalent NFA", () => {
         });
     });
 });
+
+describe("DFA minimizes to correct DFA 1", () => {
+    let initialDfa: DFA;
+    let minimizedDfa: DFA;
+    beforeAll(() => {
+        initialDfa = new DFA(["4"], {
+            "0": { "0": "1", "1": "2" },
+            "1": { "0": "1", "1": "3" },
+            "2": { "0": "1", "1": "2" },
+            "3": { "0": "1", "1": "4" },
+            "4": { "0": "1", "1": "2" }
+        })
+
+        minimizedDfa = initialDfa.minimized();
+    });
+
+    test("Minimized DFA should have 4 states", () => {
+        expect(minimizedDfa.getStates().length).toEqual(4);
+    })
+
+    // few tests
+    test("Minimized DFA should accept same strings as the initial DFA", () => {
+        const testCases = [
+            "", "0", "1", "00", "01", "10", "11", "000", "001", "010", "011", "100", "101", "110", "111",
+            "0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", 
+            "1100", "1101", "1110", "1111"
+        ]
+
+        testCases.forEach((input) => {
+            const initialAccepts = initialDfa.accepts(input);
+            const minimizedAccepts = minimizedDfa.accepts(input);
+            expect(minimizedAccepts).toBe(initialAccepts);
+        });
+    });
+});
+
+describe("DFA minimizes to correct DFA 1", () => {
+    let initialDfa: DFA;
+    let minimizedDfa: DFA;
+    beforeAll(() => {
+        initialDfa = new DFA(["2"], {
+            "0": { "0": "1", "1": "5" },
+            "1": { "0": "6", "1": "2" },
+            "2": { "0": "0", "1": "2" },
+            "3": { "0": "2", "1": "6" },
+            "4": { "0": "7", "1": "5" },
+            "5": { "0": "2", "1": "6" },
+            "6": { "0": "6", "1": "4" },
+            "7": { "0": "6", "1": "2" },
+        })
+
+        minimizedDfa = initialDfa.minimized();
+    });
+
+    test("Minimized DFA should have 5 states", () => {
+        expect(minimizedDfa.getStates().length).toEqual(5);
+    });
+
+    // few tests
+    test("Minimized DFA should accept same strings as the initial DFA", () => {
+        const testCases = [
+            "", "0", "1", "00", "01", "10", "11", "000", "001", "010", "011", "100", "101", "110", "111",
+            "0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", 
+            "1100", "1101", "1110", "1111"
+        ]
+
+        testCases.forEach((input) => {
+            const initialAccepts = initialDfa.accepts(input);
+            const minimizedAccepts = minimizedDfa.accepts(input);
+            expect(minimizedAccepts).toBe(initialAccepts);
+        });
+    });
+});
