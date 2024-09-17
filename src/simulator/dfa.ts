@@ -1,3 +1,5 @@
+import { NFA } from "./nfa";
+
 class DFA {
     private acceptStates: Set<string>;
     private table: DFATransitionTable;
@@ -25,6 +27,17 @@ class DFA {
             if (next != null) state = next;
         }
         return this.isAcceptState(state);
+    }
+
+    toNFA(): NFA {
+        const table: Record<string, Record<string, string[]>> = {};
+        for (const [state, transitions] of Object.entries(this.table)) {
+            table[state] = {};
+            for (const [symbol, target] of Object.entries(transitions)) {
+                table[state][symbol] = [target];
+            }
+        }
+        return new NFA(Array.from(this.acceptStates), table);
     }
     
     getStates(): string[] {

@@ -1,5 +1,6 @@
 import { Queue } from "@datastructures-js/queue";
-import { DFA, DFATransitionTable } from "./dfa";
+import { DFA } from "./dfa";
+import type { DFATransitionTable } from "./dfa";
 
 class NFA {
     private acceptStates: Set<string>;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import * as d3 from "d3";
 import { curvePath, getBezierMidpoint, rotatePoint } from "../utils/utils";
 import type { GraphData } from "../utils/utils";
@@ -45,8 +45,11 @@ export default function Graph({
     );
   }, [data]);
 
-  const indexToNode = new Map<number, string>();
-  data.nodeToIndex?.forEach((value, key) => indexToNode.set(value, key));
+  const indexToNode = useMemo(() => {
+    const map = new Map<number, string>();
+    data.nodeToIndex?.forEach((value, key) => map.set(value, key));
+    return map;
+  }, [data.nodeToIndex]);
 
   useEffect(() => {
     if (ref.current) {
