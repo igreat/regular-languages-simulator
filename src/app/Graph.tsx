@@ -64,7 +64,7 @@ export default function Graph({
         .attr("stroke", (_, i) => (data.acceptStates?.has(indexToNode.get(i) ?? "") ? "lightgreen" : "#fff"));
 
     }
-  }, [activeNodes, data.acceptStates]);
+  }, [activeNodes, data.acceptStates, indexToNode]);
 
   return <svg ref={ref}></svg>;
 }

@@ -8,32 +8,32 @@ type InputTableProps = {
 };
 
 function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
-    const [states, setStates] = React.useState<number[]>([]);
-    const [statesSet, setStatesSet] = React.useState<Set<number>>(new Set());
+    const [states, setStates] = React.useState<string[]>([]);
+    const [statesSet, setStatesSet] = React.useState<Set<string>>(new Set());
     const [inputSymbols, setInputSymbols] = React.useState<string[]>([]);
-    const [acceptStates, setAcceptStates] = React.useState<number[]>([]);
+    const [acceptStates, setAcceptStates] = React.useState<string[]>([]);
     // before setting table I need to validate and parse it
-    const [tableText, setTableText] = React.useState<Record<number, Record<string, string>>>({});
+    const [tableText, setTableText] = React.useState<Record<string, Record<string, string>>>({});
     const [table, setTable] = React.useState<NFATransitionTable>({});
     const [inputError, setInputError] = React.useState<string>("");
     const [newSymbol, setNewSymbol] = React.useState<string>("");
 
     useEffect(() => {
         if (initialNFA) {
-            const stateIds = Object.keys(initialNFA.table).map(Number);
-            setStates(stateIds);
+            const stateLabels = Object.keys(initialNFA.table);
+            setStates(stateLabels);
             const symbols = new Set<string>();
-            stateIds.forEach((state) => {
+            stateLabels.forEach((state) => {
                 if (!initialNFA.table[state]) return;
                 Object.keys(initialNFA.table[state]).forEach((sym) => {
                     symbols.add(sym);
                 });
             });
-            setStatesSet(new Set(Object.keys(initialNFA.table).map(Number)));
+            setStatesSet(new Set(stateLabels));
             setInputSymbols(Array.from(symbols));
             setAcceptStates(initialNFA.acceptStates);
             setTable(initialNFA.table);
-            const tableText: Record<number, Record<string, string>> = {};
+            const tableText: Record<string, Record<string, string>> = {};
             for (const state in initialNFA.table) {
                 const stateTransitions = initialNFA.table[state] ?? {};
                 const transitions: Record<string, string> = {};
@@ -45,11 +45,11 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
             setTableText(tableText);
         } else {
             // Initialize with default DFA
-            setStates([0]);
-            setStatesSet(new Set([0]));
+            setStates(["0"]);
+            setStatesSet(new Set(["0"]));
             setInputSymbols(["a", "b"]);
-            setAcceptStates([0]);
-            setTable({ 0: { a: [0], b: [0] } });
+            setAcceptStates(["0"]);
+            setTable({ "0": { a: ["0"], b: ["0"] } });
         }
     }, [initialNFA]);
 
@@ -207,7 +207,10 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                         <td className="bg-blue-500 border border-gray-700">
                             <button
                                 onClick={() => {
-                                    const newState = states.length > 0 ? Math.max(...states) + 1 : 0;
+                                    // default name for now should be the maximum of all numeric states + 1
+                                    const newState = (Math.max(0,
+                                        ...states.map((s) => isNaN(parseInt(s)) ? 0 : parseInt(s))
+                                    ) + 1).toString();
                                     const newStates = [...states, newState];
                                     setStates(newStates);
                                     setStatesSet(new Set(newStates));
@@ -271,11 +274,11 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
 
 }
 
-function validateTableText(tableText: Record<number, Record<string, string>>, statesSet: Set<number>): NFATransitionTable {
+function validateTableText(tableText: Record<string, Record<string, string>>, statesSet: Set<string>): NFATransitionTable {
     const table: NFATransitionTable = {};
     for (const state in tableText) {
         const stateTransitions = tableText[state];
-        const transitions: Record<string, number[]> = {};
+        const transitions: Record<string, string[]> = {};
         for (const symbol in stateTransitions) {
             let transition = stateTransitions[symbol];
             if (!transition) continue;
@@ -283,15 +286,13 @@ function validateTableText(tableText: Record<number, Record<string, string>>, st
             if (transition.endsWith(",")) {
                 transition = transition.slice(0, -1);
             }
-            const states = transition.split(",").map((s) => parseInt(s.trim()));
-            if (states.some((s) => isNaN(s))) {
-                throw new Error(`Non-numeric target state for state ${state} and symbol "${symbol}".`);
-            } else if (states.some((s) => !statesSet.has(s))) {
+            const states = transition.split(",").map((s) => s.trim());
+            if (states.some((s) => !statesSet.has(s))) {
                 throw new Error(`Target state for state ${state} and symbol "${symbol}" is not in the list of states.`);
             }
             transitions[symbol] = states;
         }
-        table[parseInt(state)] = transitions;
+        table[state] = transitions;
     }
     return table;
 }

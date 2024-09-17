@@ -1,4 +1,3 @@
-import type { DFAJson } from "../simulator/dfa";
 import type { NFAJson } from "~/simulator/nfa";
 import type * as d3 from "d3";
 
