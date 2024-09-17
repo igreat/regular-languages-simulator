@@ -1,19 +1,20 @@
 import { Queue } from "@datastructures-js/queue";
+import { DFA, DFATransitionTable } from "./dfa";
 
 class NFA {
-    private acceptStates: Set<number>;
+    private acceptStates: Set<string>;
     private table: NFATransitionTable;
     private symbols: string[];
-    private states: number[];
+    private states: string[];
 
-    constructor(acceptStates: number[], table: NFATransitionTable) {
+    constructor(acceptStates: string[], table: NFATransitionTable) {
         this.acceptStates = new Set(acceptStates);
         this.table = table;
         this.states = [];
 
         const symbolSet = new Set<string>();
         for (const [state, transitions] of Object.entries(this.table)) {
-            this.states.push(Number(state));
+            this.states.push(state);
             for (const symbol of Object.keys(transitions)) {
                 symbolSet.add(symbol);
             }
@@ -21,11 +22,11 @@ class NFA {
         this.symbols = Array.from(symbolSet).sort()
     }
 
-    *simulation(input: string): Generator<number[], boolean, unknown> {
-        const queue = new Queue<number>(this.epsilonClosure(0));
+    *simulation(input: string): Generator<string[], boolean, unknown> {
+        const queue = new Queue<string>(Array.from(this.epsilonClosure("0")));
         let i = 0;
 
-        let currentLevel: number[] = [];
+        let currentLevel: string[] = [];
         while (i == input.length || !queue.isEmpty()) {
             const levelSize = queue.size();
             currentLevel = [];
@@ -58,69 +59,30 @@ class NFA {
         return curr.value;
     }
 
-    isAcceptState(state: number): boolean {
+    isAcceptState(state: string): boolean {
         return this.acceptStates.has(state);
     }
 
-    containsAcceptState(states: number[]): boolean {
+    containsAcceptState(states: string[]): boolean {
         return states.some((state) => this.isAcceptState(state));
     }
 
-    // returns true if both NFAs have the same language
-    equals(other: NFA): boolean {
-        const symbols = new Set<string>([...this.symbols, ...other.symbols]);
-        symbols.delete("~");
+    toDFA(): DFA {
+        // represent state as a set?
+        // then to hash the set I join it into a string
+        const table: DFATransitionTable = {};
+        const acceptStates = new Set<string>();
+        const queue = new Queue<Set<string>>([this.epsilonClosure("0")]);
 
-        // memoization map
-        const memo = new Map<string, boolean>();
-        const inCall = new Set<string>();
 
-        const isEqualPath = (node1: number, node2: number): boolean => {
-            const key = `${node1},${node2}`;
-            if (memo.has(key))
-                return memo.get(key) ?? false;
-        
-            if (inCall.has(key))
-                return false;
-
-            inCall.add(key);
-            for (const symbol of symbols) {
-                const transitions1 = this.getNextStates(node1, symbol);
-                const transitions2 = other.getNextStates(node2, symbol);
-
-                const accept1 = this.containsAcceptState(transitions1);
-                const accept2 = this.containsAcceptState(transitions2);
-
-                if (accept1 != accept2) {
-                    memo.set(key, false);
-                    inCall.delete(key);
-                    return false;
-                }
-
-                for (const n1 of transitions1) {
-                    for (const n2 of transitions2) {
-                        if (isEqualPath(n1, n2)) {
-                            memo.set(key, true);
-                            inCall.delete(key);
-                            return true;
-                        }
-                    }
-                }
-            }
-
-            memo.set(key, false);
-            inCall.delete(key);
-            return false;
-        }
-
-        return isEqualPath(0, 0);
+        return new DFA(Array.from(acceptStates), table);
     }
 
     // symbol for epsilon is "~"
     // this will skip all epsilon (aka, free) transitions
-    epsilonClosure(state: number): number[] {
-        const closure = new Set<number>();
-        const dfs = (node: number) => {
+    epsilonClosure(state: string): Set<string> {
+        const closure = new Set<string>();
+        const dfs = (node: string) => {
             if (closure.has(node))
                 return;
             closure.add(node);
@@ -130,15 +92,15 @@ class NFA {
             }
         }
         dfs(state);
-        return Array.from(closure);
+        return closure;
     }
 
-    getNextStates(state: number, symbol: string): number[] {
-        return Array.from(
-            new Set(
-                this.table[state]?.[symbol]?.flatMap(next => this.epsilonClosure(next)) ?? []
-            )
-        );
+    getNextStates(state: string, symbol: string): Set<string> {
+        const closure = new Set<string>();
+        for (const neighbor of this.table[state]?.[symbol] ?? []) {
+            this.epsilonClosure(neighbor).forEach((u) => closure.add(u));
+        }
+        return closure;
     }
 
     toJSON(): NFAJson {
@@ -150,9 +112,9 @@ class NFA {
 }
 
 
-type NFATransitionTable = Record<number, Record<string, number[]>>;
+type NFATransitionTable = Record<string, Record<string, string[]>>;
 type NFAJson = {
-    acceptStates: number[];
+    acceptStates: string[];
     table: NFATransitionTable;
 };
 

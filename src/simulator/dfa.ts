@@ -1,25 +1,25 @@
 class DFA {
-    private acceptStates: Set<number>;
-    private table: TransitionTable;
+    private acceptStates: Set<string>;
+    private table: DFATransitionTable;
 
-    constructor(acceptStates: number[], table: TransitionTable) {
+    constructor(acceptStates: string[], table: DFATransitionTable) {
         this.acceptStates = new Set(acceptStates);
         this.table = table;
     }
 
-    run(input: string, state: number): number | null {
+    run(input: string, state: string): string | null {
         if (this.table[state] && input in this.table[state]) {
             return this.table[state][input] ?? null;
         }
         return null;
     }
 
-    isAcceptState(state: number): boolean {
+    isAcceptState(state: string): boolean {
         return this.acceptStates.has(state);
     }
 
     accepts(input: string): boolean {
-        let state = 0;
+        let state = "0";
         for (const c of input) {
             const next = this.run(c, state);
             if (next != null) state = next;
@@ -35,12 +35,11 @@ class DFA {
     }
 }
 
-type TransitionTable = Record<number, Record<string, number>>;
-
+type DFATransitionTable = Record<string, Record<string, string>>;
 type DFAJson = {
-    acceptStates: number[];
-    table: TransitionTable;
+    acceptStates: string[];
+    table: DFATransitionTable;
 };
 
 export { DFA };
-export type { TransitionTable, DFAJson };
+export type { DFATransitionTable, DFAJson };

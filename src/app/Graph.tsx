@@ -10,7 +10,7 @@ export default function Graph({
   activeNodes,
 }: {
   data: GraphData;
-  activeNodes: Set<number>;
+  activeNodes: Set<string>;
 }) {
   const ref = useRef<SVGSVGElement | null>(null);
 
@@ -45,6 +45,9 @@ export default function Graph({
     );
   }, [data]);
 
+  const indexToNode = new Map<number, string>();
+  data.nodeToIndex?.forEach((value, key) => indexToNode.set(value, key));
+
   useEffect(() => {
     if (ref.current) {
       const svg = d3.select(ref.current);
@@ -52,13 +55,13 @@ export default function Graph({
       svg
         .selectAll("circle")
         .style("fill", (_, i) => {
-          if (activeNodes.has(i)) {
+          if (activeNodes.has(indexToNode.get(i) ?? "")) {
             return "red";
           }
-          return i == 0 ? "#7f7f7f" : "#000";
+          return (indexToNode.get(i) ?? "") == "0" ? "#7f7f7f" : "#000";
         })
-        .attr("stroke-width", (_, i) => (data.acceptStates?.has(i) ? 3 : 2))
-        .attr("stroke", (_, i) => (data.acceptStates?.has(i) ? "lightgreen" : "#fff"));
+        .attr("stroke-width", (_, i) => (data.acceptStates?.has(indexToNode.get(i) ?? "") ? 3 : 2))
+        .attr("stroke", (_, i) => (data.acceptStates?.has(indexToNode.get(i) ?? "") ? "lightgreen" : "#fff"));
 
     }
   }, [activeNodes, data.acceptStates]);

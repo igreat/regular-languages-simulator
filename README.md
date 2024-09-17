@@ -21,6 +21,7 @@
 - [ ] Saving and loading DFA/NFA from database (Vercel Postgres)
 - [ ] Authentication
 - [ ] Add ability to stop forces and fix DFA/NFA
+- [ ] Links unnaturally keep flipping around, fix that
 
 Likely will abandon in favour of table based UI (simpler and might be more practical anyway)
 

@@ -12,8 +12,8 @@ import { NFAJsonToGraphData } from "../utils/utils";
 import exampleNFAJson from "../../data/even_0s_or_1s_nfa.json";
 
 export default function HomePage() {
-  const [currentStates, setCurrentStates] = useState<number[]>([]);
-  const [simulation, setSimulation] = useState<Generator<number[], boolean> | null>(null);
+  const [currentStates, setCurrentStates] = useState<string[]>([]);
+  const [simulation, setSimulation] = useState<Generator<string[], boolean> | null>(null);
   const [input, setInput] = useState<string>("");
   const [inputPos, setInputPos] = useState<number>(0);
   const [nfaJson, setNFAJson] = useState<string>(

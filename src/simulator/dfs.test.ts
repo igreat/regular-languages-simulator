@@ -5,20 +5,20 @@ describe("Loading and saving DFA", () => {
     let dfa: DFA;
     let jsonString: string;
     beforeAll(() => {
-        dfa = new DFA([3], {
-            0: { a: 1, b: 0 },
-            1: { a: 1, b: 2 },
-            2: { a: 3, b: 0 },
-            3: { a: 1, b: 2 }
+        dfa = new DFA(["3"], {
+            "0": { a: "1", b: "0" },
+            "1": { a: "1", b: "2" },
+            "2": { a: "3", b: "0" },
+            "3": { a: "1", b: "2" }
         });
 
         jsonString = `{
-            "acceptStates": [3],
+            "acceptStates": ["3"],
             "table": {
-                "0": { "a": 1, "b": 0 },
-                "1": { "a": 1, "b": 2 },
-                "2": { "a": 3, "b": 0 },
-                "3": { "a": 1, "b": 2 }
+                "0": { "a": "1", "b": "0" },
+                "1": { "a": "1", "b": "2" },
+                "2": { "a": "3", "b": "0" },
+                "3": { "a": "1", "b": "2" }
             }
         }`;
     });
@@ -44,15 +44,15 @@ describe("Even DFA", () => {
     let dfa: DFA;
 
     beforeAll(() => {
-        dfa = new DFA([0], {
-            0: { a: 1 },
-            1: { a: 0 },
+        dfa = new DFA(["0"], {
+            "0": { a: "1" },
+            "1": { a: "0" },
         });
     });
 
     test("Transitions from 0 to 1 and 1 to 0", () => {
-        expect(dfa.run("a", 0)).toBe(1);
-        expect(dfa.run("a", 1)).toBe(0);
+        expect(dfa.run("a", "0")).toBe("1");
+        expect(dfa.run("a", "1")).toBe("0");
     });
 
     test("Accepts empty string", () => {
@@ -68,7 +68,7 @@ describe("Even DFA", () => {
     });
 
     test("Does not accept b", () => {
-        expect(dfa.run("b", 0)).toBeNull();
+        expect(dfa.run("b", "0")).toBeNull();
     });
 
 });
@@ -77,11 +77,11 @@ describe("DFA that accepts any 'aba' suffix", () => {
     let dfa: DFA;
 
     beforeAll(() => {
-        dfa = new DFA([3], {
-            0: { a: 1, b: 0 },
-            1: { a: 1, b: 2 },
-            2: { a: 3, b: 0 },
-            3: { a: 1, b: 2 }
+        dfa = new DFA(["3"], {
+            "0": { a: "1", b: "0" },
+            "1": { a: "1", b: "2" },
+            "2": { a: "3", b: "0" },
+            "3": { a: "1", b: "2" }
         });
     });
 

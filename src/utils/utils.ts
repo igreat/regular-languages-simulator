@@ -7,43 +7,15 @@ export type GraphData = {
     links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
     nodeLabels: string[];
     linkLabels: string[];
-    acceptStates?: Set<number>;
+    acceptStates?: Set<string>;
+    nodeToIndex?: Map<string, number>;
 };
 
-export function DFAJsonToGraphData(data: DFAJson): GraphData {
-    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
-    const nodeLabels: string[] = Object.keys(data.table);
-    // multiple of the same link can have different symbols, so the linkLabel should just be one comma separated string
-    const srcToTarget = new Map<number, Map<number, string[]>>();
-    for (const [source, targets] of Object.entries(data.table)) {
-        for (const [symbol, target] of Object.entries(targets)) {
-            if (!srcToTarget.has(Number(source))) {
-                srcToTarget.set(Number(source), new Map());
-            }
-            if (!srcToTarget.get(Number(source))?.has(target)) {
-                srcToTarget.get(Number(source))?.set(target, []);
-            }
-            srcToTarget.get(Number(source))?.get(target)?.push(symbol);
-        }
-    }
-
-    const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
-    const linkLabels: string[] = [];
-    for (const [source, targets] of srcToTarget) {
-        for (const [target, symbols] of targets) {
-            links.push({ source: Number(source), target: target });
-            linkLabels.push(symbols.join(","));
-        }
-    }
-
-    return { nodes, links, nodeLabels, linkLabels, acceptStates: new Set(data.acceptStates) };
-}
-
-export function getNodeToIndexMap(data: NFAJson): Map<number, number> {
+export function getNodeToIndexMap(data: NFAJson): Map<string, number> {
     let index = 0;
-    const nodeToIndex = new Map<number, number>();
+    const nodeToIndex = new Map<string, number>();
     for (const node of Object.keys(data.table)) {
-        nodeToIndex.set(Number(node), index);
+        nodeToIndex.set(node, index);
         index++;
     } 
     return nodeToIndex;
@@ -52,12 +24,16 @@ export function getNodeToIndexMap(data: NFAJson): Map<number, number> {
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
     const nodeToIndex = getNodeToIndexMap(data);
+    const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
+    for (const [node, index] of nodeToIndex) {
+        nodeLabels[index] = node.toString()
+    }
+
     // multiple of the same link can have different symbols, so the linkLabel should just be one comma separated string
     const srcToTarget = new Map<number, Map<number, string[]>>();
     for (const [source, targets] of Object.entries(data.table)) {
-        const src = Number(source);
-        const srcIndex = nodeToIndex.get(src) ?? 0;
-        if (!srcToTarget.has(src)) {
+        const srcIndex = nodeToIndex.get(source) ?? 0;
+        if (!srcToTarget.has(srcIndex)) {
             srcToTarget.set(srcIndex, new Map());
         }
         for (const [symbol, target] of Object.entries(targets)) {
@@ -70,11 +46,6 @@ export function NFAJsonToGraphData(data: NFAJson): GraphData {
             });
         }
     }
-    
-    const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
-    for (const [node, index] of nodeToIndex) {
-        nodeLabels[index] = node.toString()
-    }
 
     const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
     const linkLabels: string[] = [];
@@ -85,7 +56,7 @@ export function NFAJsonToGraphData(data: NFAJson): GraphData {
         }
     }
 
-    return { nodes, links, nodeLabels, linkLabels, acceptStates: new Set(data.acceptStates) };
+    return { nodes, links, nodeLabels, linkLabels, acceptStates: new Set(data.acceptStates), nodeToIndex };
 }
 
 export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
