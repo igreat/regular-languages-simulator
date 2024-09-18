@@ -51,6 +51,68 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
           {/* NFA and Buttons Section*/}
           <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
+            {/* Buttons Above */}
+            <div className="flex flex-row justify-center gap-4 w-full">
+              <button
+                onClick={() => {
+                  console.log("brudda");
+                  if (!nfa)
+                    return;
+                  const newNFA = nfa.toDFA().toNFA();
+                  setNFA(newNFA);
+                  setData(NFAJsonToGraphData(newNFA.toJSON()));
+                  setCurrentStates([]);
+                  setInputPos(0);
+                  setSimulation(null);
+                }}
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+              >
+                Convert to DFA
+              </button>
+              <button
+                onClick={() => {
+                  if (!nfa)
+                    return;
+
+                  // nfa needs to be a DFA, otherwise display an error message
+                  if (!nfa.isDFA()) {
+                    console.error("NFA is not a DFA"); // TODO: make this more user-friendly
+                  }
+
+                  const minimized = nfa.toDFA().minimized().toNFA();
+                  setNFA(minimized);
+                  setData(NFAJsonToGraphData(minimized.toJSON()));
+                  setCurrentStates([]);
+                  setInputPos(0);
+                  setSimulation(null);
+                }}
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+              >
+                Minimize
+              </button>
+              <button
+                onClick={() => {
+                  // for now only allow relabelling of nfas that are dfas
+                  if (!nfa)
+                    return;
+
+                  // nfa needs to be a DFA, otherwise display an error message
+                  if (!nfa.isDFA()) {
+                    console.error("NFA is not a DFA"); // TODO: make this more user-friendly
+                  }
+
+                  const relabeled = nfa.toDFA().relabeled().toNFA();
+                  setNFA(relabeled);
+                  setData(NFAJsonToGraphData(relabeled.toJSON()));
+                  setCurrentStates([]);
+                  setInputPos(0);
+                  setSimulation(null);
+                }}
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+              >
+                Relabel
+              </button>
+            </div>
             {/* Simulation Part */}
             <Graph data={data} activeNodes={new Set(currentStates)} />
             <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
