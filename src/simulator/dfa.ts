@@ -56,12 +56,18 @@ class DFA {
         const states = this.getReachableStates();
         const rejectStates = states;
         this.acceptStates.forEach((s) => rejectStates.delete(s));
-
         const belongsTo = new Map<string, number>();
-        rejectStates.forEach((s) => belongsTo.set(s, 0));
-        this.acceptStates.forEach((s) => belongsTo.set(s, 1));
 
-        let currEquivs: string[][] = [Array.from(rejectStates), Array.from(this.acceptStates)];
+        let currEquivs: string[][] = [];
+        if (rejectStates.size > 0) {
+            rejectStates.forEach((s) => belongsTo.set(s, currEquivs.length));
+            currEquivs.push(Array.from(rejectStates));
+        }
+        if (this.acceptStates.size > 0) {
+            this.acceptStates.forEach((s) => belongsTo.set(s, currEquivs.length));
+            currEquivs.push(Array.from(this.acceptStates));
+        }
+        
         let prevEquivs: string[][] = [];
 
         do {

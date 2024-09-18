@@ -249,6 +249,19 @@ describe("DFA minimizes to correct DFA 1", () => {
     });
 });
 
+test("DFA that accepts all strings should minimize to one state", () => {
+    const dfa = new DFA("0", ["0", "1", "2", "3", "4"], {
+        "0": { "0": "1", "1": "2" },
+        "1": { "0": "3", "1": "4" },
+        "2": { "0": "4", "1": "3" },
+        "3": { "0": "1", "1": "2" },
+        "4": { "0": "2", "1": "1" }
+    });
+
+    const minimizedDfa = dfa.minimized();
+    expect(minimizedDfa.getStates().length).toBe(1);
+})
+
 describe("DFA relabels to the right DFA", () => {
     let initialDfa: DFA;
     let relabeledDfa: DFA;
