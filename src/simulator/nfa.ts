@@ -144,6 +144,46 @@ class NFA {
         return true;
     }
 
+    relabeled(): NFA {
+        const newLabels = new Map<string, string>();
+        const queue = new Queue<string>(Array.from(this.epsilonClosure(this.startState)));
+        let curr = 0;
+        const visited = new Set<string>();
+        while (!queue.isEmpty()) {
+            const state = queue.pop();
+            if (visited.has(state))
+                continue;
+            visited.add(state);
+            newLabels.set(state, curr.toString());
+            curr++;
+
+            for (const symbol of this.symbols) {
+                const nextState = this.table[state]?.[symbol];
+                if (!nextState) continue;
+                for (const neighbor of nextState) {
+                    this.epsilonClosure(neighbor).forEach((u) => queue.enqueue(u));
+                }
+            }
+        }
+
+        const newTable: NFATransitionTable = {};
+        for (const [src, transitions] of Object.entries(this.table)) {
+            const srcLabel = newLabels.get(src)!;
+            newTable[srcLabel] = {};
+            for (const [symbol, targets] of Object.entries(transitions)) {
+                newTable[srcLabel][symbol] = targets.map((target) => newLabels.get(target)!);
+            }
+        }
+
+        const newStartState = newLabels.get(this.startState)!;
+        const newAcceptStates = new Set<string>();
+        this.acceptStates.forEach((state) => {
+            newAcceptStates.add(newLabels.get(state)!);
+        });
+
+        return new NFA(newStartState, Array.from(newAcceptStates), newTable);
+    }
+
     getStates(): string[] {
         // return a copy of the states
         return [...this.states];

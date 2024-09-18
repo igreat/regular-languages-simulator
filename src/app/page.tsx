@@ -98,12 +98,7 @@ export default function HomePage() {
                     return;
 
                   // nfa needs to be a DFA, otherwise display an error message
-                  if (!nfa.isDFA()) {
-                    alert("NFA needs to be a DFA to relabel"); // TODO: make this more user friendly
-                    return;
-                  }
-
-                  const relabeled = nfa.toDFA().relabeled().toNFA();
+                  const relabeled = nfa.relabeled();
                   setNFA(relabeled);
                   setData(NFAJsonToGraphData(relabeled.toJSON()));
                   setCurrentStates([]);
