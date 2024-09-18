@@ -19,6 +19,7 @@ export default function HomePage() {
   const [nfaJson, setNFAJson] = useState<string>(
     JSON.stringify(exampleNFAJson, null, 2)
   );
+  const [tableNfaJson, setTableNfaJson] = useState<NFAJson>(exampleNFAJson);
   const [nfa, setNFA] = useState<NFA | null>(
     new NFA(exampleNFAJson.startState, exampleNFAJson.acceptStates, exampleNFAJson.table)
   );
@@ -75,7 +76,8 @@ export default function HomePage() {
 
                   // nfa needs to be a DFA, otherwise display an error message
                   if (!nfa.isDFA()) {
-                    console.error("NFA is not a DFA"); // TODO: make this more user-friendly
+                    alert("NFA needs to be a DFA to minimize"); // TODO: make this more user friendly
+                    return;
                   }
 
                   const minimized = nfa.toDFA().minimized().toNFA();
@@ -97,7 +99,8 @@ export default function HomePage() {
 
                   // nfa needs to be a DFA, otherwise display an error message
                   if (!nfa.isDFA()) {
-                    console.error("NFA is not a DFA"); // TODO: make this more user-friendly
+                    alert("NFA needs to be a DFA to relabel"); // TODO: make this more user friendly
+                    return;
                   }
 
                   const relabeled = nfa.toDFA().relabeled().toNFA();
@@ -110,6 +113,16 @@ export default function HomePage() {
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
                 Relabel
+              </button>
+              <button
+                onClick={() => {
+                  if (!nfa)
+                    return;
+                  setTableNfaJson(nfa.toJSON());
+                }}
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+              >
+                Copy to Table
               </button>
             </div>
             {/* Simulation Part */}
@@ -159,7 +172,7 @@ export default function HomePage() {
           {/* Input Table Section */}
           <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
             {/* Text box to enter a custom NFA JSON */}
-            <InputTable onNFAChange={handleNFAChange} initialNFA={exampleNFAJson} />
+            <InputTable onNFAChange={handleNFAChange} initialNFA={tableNfaJson} />
             <textarea
               className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm resize-none"
               rows={10}

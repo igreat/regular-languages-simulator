@@ -84,15 +84,6 @@ function InputTable({ onNFAChange, initialNFA }: InputTableProps) {
         <div className="p-4 bg-gray-800 text-white rounded-md w-full overflow-x-auto">
             {/* Section to add a new input symbol */}
             <div className="flex items-center mb-4">
-                <input
-                    type="text"
-                    value={newSymbol}
-                    onChange={(e) => setNewSymbol(e.target.value)}
-                    onKeyDown={handleNewSymbolKeyPress}
-                    maxLength={1}
-                    className="w-12 bg-gray-700 text-white px-2 py-1 rounded-md mr-2"
-                    placeholder="Symbol"
-                />
                 <button
                     onClick={handleAddSymbol}
                     className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
@@ -105,8 +96,17 @@ function InputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                 : "Add Symbol"
                     }
                 >
-                    +
+                    Add to Alphabet
                 </button>
+                <input
+                    type="text"
+                    value={newSymbol}
+                    onChange={(e) => setNewSymbol(e.target.value)}
+                    onKeyDown={handleNewSymbolKeyPress}
+                    maxLength={1}
+                    className="w-14 bg-gray-700 text-white px-2 py-1 rounded-md ml-2"
+                    placeholder="eg. a"
+                />
             </div>
 
             {/* DFA Transition Table */}
