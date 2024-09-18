@@ -119,7 +119,7 @@ class DFA {
         const newAcceptStates = new Set<string>();
         for (const equiv of currEquivs) {
             if (equiv.some((state) => this.acceptStates.has(state))) {
-                newAcceptStates.add(equiv[0]!);
+                newAcceptStates.add(equiv.join("-"));
             }
         }
 

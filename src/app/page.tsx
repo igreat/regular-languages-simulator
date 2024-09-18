@@ -55,7 +55,6 @@ export default function HomePage() {
             <div className="flex flex-row justify-center gap-4 w-full">
               <button
                 onClick={() => {
-                  console.log("brudda");
                   if (!nfa)
                     return;
                   const newNFA = nfa.toDFA().toNFA();
