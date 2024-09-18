@@ -6,7 +6,7 @@ describe("Loading and saving NFA", () => {
     let nfa: NFA;
     let jsonString: string;
     beforeAll(() => {
-        nfa = new NFA(["1", "3"], {
+        nfa = new NFA("0", ["1", "3"], {
             "0": { "~": ["1", "3"] },
             "1": { "0": ["2"], "1": ["1"] },
             "2": { "0": ["1"], "1": ["2"] },
@@ -15,6 +15,7 @@ describe("Loading and saving NFA", () => {
         })
 
         jsonString = `{
+            "startState": "0",
             "acceptStates": ["1", "3"],
             "table": {
                 "0": { "~": ["1", "3"] },
@@ -28,8 +29,9 @@ describe("Loading and saving NFA", () => {
 
     test("Load NFA from JSON string", () => {
         const json = JSON.parse(jsonString) as NFAJson;
-        const nfa = new NFA(json.acceptStates, json.table);
+        const nfa = new NFA(json.startState, json.acceptStates, json.table);
 
+        expect(nfa.getStartState()).toBe("0");
         expect(nfa.accepts("")).toBe(true);
         expect(nfa.accepts("010")).toBe(true);
         expect(nfa.accepts("101")).toBe(true);
@@ -49,7 +51,7 @@ describe("NFA that determines if input contains an even number of 0s or an even 
     let nfa: NFA;
 
     beforeAll(() => {
-        nfa = new NFA(["1", "3"], {
+        nfa = new NFA("0", ["1", "3"], {
             "0": { "~": ["1", "3"] },
             "1": { "0": ["2"], "1": ["1"] },
             "2": { "0": ["1"], "1": ["2"] },
@@ -112,7 +114,7 @@ describe("Convert NFA that accepts strings ending with 'ab' to equivalent DFA", 
     let target_dfa: DFA;
 
     beforeAll(() => {
-        nfa = new NFA(["2"], {
+        nfa = new NFA("0", ["2"], {
             "0": { a: ["0", "1"], b: ["0"] },
             "1": { b: ["2"] },
             "2": {}
@@ -120,7 +122,7 @@ describe("Convert NFA that accepts strings ending with 'ab' to equivalent DFA", 
 
         generated_dfa = nfa.toDFA();
 
-        target_dfa = new DFA(["0,2"], {
+        target_dfa = new DFA("0", ["0,2"], {
             "0": { a: "0,1", b: "0" },
             "0,1": { a: "0,1", b: "0,2" },
             "0,2": { a: "0,1", b: "0" }

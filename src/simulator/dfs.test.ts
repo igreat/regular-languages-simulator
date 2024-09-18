@@ -6,7 +6,7 @@ describe("Loading and saving DFA", () => {
     let dfa: DFA;
     let jsonString: string;
     beforeAll(() => {
-        dfa = new DFA(["3"], {
+        dfa = new DFA("0", ["3"], {
             "0": { a: "1", b: "0" },
             "1": { a: "1", b: "2" },
             "2": { a: "3", b: "0" },
@@ -14,6 +14,7 @@ describe("Loading and saving DFA", () => {
         });
 
         jsonString = `{
+            "startState": "0",
             "acceptStates": ["3"],
             "table": {
                 "0": { "a": "1", "b": "0" },
@@ -26,8 +27,9 @@ describe("Loading and saving DFA", () => {
 
     test("Load DFA from JSON string", () => {
         const json = JSON.parse(jsonString) as DFAJson;
-        const dfa = new DFA(json.acceptStates, json.table);
+        const dfa = new DFA(json.startState, json.acceptStates, json.table);
 
+        expect(dfa.getStartState()).toBe("0");
         expect(dfa.accepts("aba")).toBe(true);
         expect(dfa.accepts("abaa")).toBe(false);
     });
@@ -45,7 +47,7 @@ describe("Even DFA", () => {
     let dfa: DFA;
 
     beforeAll(() => {
-        dfa = new DFA(["0"], {
+        dfa = new DFA("0", ["0"], {
             "0": { a: "1" },
             "1": { a: "0" },
         });
@@ -78,7 +80,7 @@ describe("DFA that accepts any 'aba' suffix", () => {
     let dfa: DFA;
 
     beforeAll(() => {
-        dfa = new DFA(["3"], {
+        dfa = new DFA("0", ["3"], {
             "0": { a: "1", b: "0" },
             "1": { a: "1", b: "2" },
             "2": { a: "3", b: "0" },
@@ -113,14 +115,14 @@ describe("DFA converts to equivalent NFA", () => {
     let target_nfa: NFA;
 
     beforeAll(() => {
-        dfa = new DFA(["0"], {
+        dfa = new DFA("0", ["0"], {
             "0": { a: "1" },
             "1": { a: "0" },
         });
 
         generated_nfa = dfa.toNFA();
 
-        target_nfa = new NFA(["0"], {
+        target_nfa = new NFA("0", ["0"], {
             "0": { a: ["1"] },
             "1": { a: ["0"] },
         });
@@ -178,7 +180,7 @@ describe("DFA minimizes to correct DFA 1", () => {
     let initialDfa: DFA;
     let minimizedDfa: DFA;
     beforeAll(() => {
-        initialDfa = new DFA(["4"], {
+        initialDfa = new DFA("0", ["4"], {
             "0": { "0": "1", "1": "2" },
             "1": { "0": "1", "1": "3" },
             "2": { "0": "1", "1": "2" },
@@ -213,7 +215,7 @@ describe("DFA minimizes to correct DFA 1", () => {
     let initialDfa: DFA;
     let minimizedDfa: DFA;
     beforeAll(() => {
-        initialDfa = new DFA(["2"], {
+        initialDfa = new DFA("0", ["2"], {
             "0": { "0": "1", "1": "5" },
             "1": { "0": "6", "1": "2" },
             "2": { "0": "0", "1": "2" },

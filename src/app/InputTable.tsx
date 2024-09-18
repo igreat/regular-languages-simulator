@@ -9,6 +9,7 @@ type InputTableProps = {
 
 function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
     const [states, setStates] = React.useState<string[]>([]);
+    const [startState, setStartState] = React.useState<string>(""); // if not provided, default to first state in `states`
     const [statesSet, setStatesSet] = React.useState<Set<string>>(new Set());
     const [inputSymbols, setInputSymbols] = React.useState<string[]>([]);
     const [acceptStates, setAcceptStates] = React.useState<string[]>([]);
@@ -29,6 +30,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                     symbols.add(sym);
                 });
             });
+            setStartState(initialNFA.startState);
             setStatesSet(new Set(stateLabels));
             setInputSymbols(Array.from(symbols));
             setAcceptStates(initialNFA.acceptStates);
@@ -46,6 +48,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
         } else {
             // Initialize with default DFA
             setStates(["0"]);
+            setStartState("0");
             setStatesSet(new Set(["0"]));
             setInputSymbols(["a", "b"]);
             setAcceptStates(["0"]);
@@ -54,8 +57,8 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
     }, [initialNFA]);
 
     useEffect(() => {
-        onNFAChange(JSON.stringify({ acceptStates, table }, null, 2));
-    }, [acceptStates, table, onNFAChange]);
+        onNFAChange(JSON.stringify({ startState, acceptStates, table }, null, 2));
+    }, [startState, acceptStates, table, onNFAChange]);
 
     const handleAddSymbol = () => {
         const sym = newSymbol.trim();
@@ -179,6 +182,9 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
 
                                         const newStates = states.filter((s) => s !== state);
                                         const newStatesSet = new Set(newStates);
+                                        if (startState === state) {
+                                            setStartState(newStates[0] ?? "");
+                                        }
                                         setStates(newStates);
                                         setStatesSet(newStatesSet);
                                         setAcceptStates(acceptStates.filter((s) => s !== state));

@@ -3,15 +3,16 @@ import { DFA } from "./dfa";
 import type { DFATransitionTable } from "./dfa";
 
 class NFA {
+    private startState: string;
     private acceptStates: Set<string>;
     private table: NFATransitionTable;
     private symbols: string[];
     private states: string[];
 
-    constructor(acceptStates: string[], table: NFATransitionTable) {
+    constructor(startState: string, acceptStates: string[], table: NFATransitionTable) {
+        this.startState = startState;
         this.acceptStates = new Set(acceptStates);
         this.table = table;
-        console.assert("0" in this.table);
         this.states = [];
 
         const symbolSet = new Set<string>();
@@ -25,7 +26,7 @@ class NFA {
     }
 
     *simulation(input: string): Generator<string[], boolean, unknown> {
-        const queue = new Queue<string>(Array.from(this.epsilonClosure("0")));
+        const queue = new Queue<string>(Array.from(this.epsilonClosure(this.startState)));
         let i = 0;
 
         let currentLevel: string[] = [];
@@ -70,11 +71,10 @@ class NFA {
     }
 
     toDFA(): DFA {
-        // represent state as a set?
-        // then to hash the set I join it into a string
         const table: DFATransitionTable = {};
         const acceptStates = new Set<string>();
-        const queue = new Queue<Set<string>>([this.epsilonClosure("0")]);
+        const startState = Array.from(this.epsilonClosure(this.startState)).sort().join(",");
+        const queue = new Queue<Set<string>>([this.epsilonClosure(this.startState)]);
         const visited = new Set<string>();
         while (!queue.isEmpty()) {
             const srcStates = queue.pop();
@@ -105,7 +105,7 @@ class NFA {
             }
         }
 
-        return new DFA(Array.from(acceptStates), table);
+        return new DFA(startState, Array.from(acceptStates), table);
     }
 
     // symbol for epsilon is "~"
@@ -130,8 +130,13 @@ class NFA {
         return [...this.states];
     }
 
+    getStartState(): string {
+        return this.startState;
+    }
+
     toJSON(): NFAJson {
         return {
+            startState: this.startState,
             acceptStates: Array.from(this.acceptStates),
             table: this.table
         };
@@ -141,6 +146,7 @@ class NFA {
 
 type NFATransitionTable = Record<string, Record<string, string[]>>;
 type NFAJson = {
+    startState: string;
     acceptStates: string[];
     table: NFATransitionTable;
 };

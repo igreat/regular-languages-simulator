@@ -1,4 +1,5 @@
 {
+    "startState": "0",
     "acceptStates": ["1", "3"],
     "table": {
         "0": { "~": ["1", "3"] },

@@ -20,7 +20,7 @@ export default function HomePage() {
     JSON.stringify(exampleNFAJson, null, 2)
   );
   const [nfa, setNFA] = useState<NFA | null>(
-    new NFA(exampleNFAJson.acceptStates, exampleNFAJson.table)
+    new NFA(exampleNFAJson.startState, exampleNFAJson.acceptStates, exampleNFAJson.table)
   );
   const [data, setData] = useState<GraphData>(
     NFAJsonToGraphData(exampleNFAJson as NFAJson)
@@ -112,7 +112,7 @@ export default function HomePage() {
               onClick={() => {
                 try {
                   const json = JSON.parse(nfaJson) as NFAJson;
-                  setNFA(new NFA(json.acceptStates, json.table));
+                  setNFA(new NFA(json.startState, json.acceptStates, json.table));
                   setData(NFAJsonToGraphData(json));
                   setCurrentStates([]);
                   setInputPos(0);

@@ -61,13 +61,13 @@ export default function Graph({
           if (activeNodes.has(indexToNode.get(i) ?? "")) {
             return "red";
           }
-          return (indexToNode.get(i) ?? "") == "0" ? "#7f7f7f" : "#000";
+          return (indexToNode.get(i) ?? "") == data.startState ? "#7f7f7f" : "#000";
         })
-        .attr("stroke-width", (_, i) => (data.acceptStates?.has(indexToNode.get(i) ?? "") ? 3 : 2))
-        .attr("stroke", (_, i) => (data.acceptStates?.has(indexToNode.get(i) ?? "") ? "lightgreen" : "#fff"));
+        .attr("stroke-width", (_, i) => (data.acceptStates.has(indexToNode.get(i) ?? "") ? 3 : 2))
+        .attr("stroke", (_, i) => (data.acceptStates.has(indexToNode.get(i) ?? "") ? "lightgreen" : "#fff"));
 
     }
-  }, [activeNodes, data.acceptStates, indexToNode]);
+  }, [activeNodes, data.acceptStates, data.startState, indexToNode]);
 
   return <svg ref={ref}></svg>;
 }

@@ -1,14 +1,15 @@
 import { NFA } from "./nfa";
 
 class DFA {
+    private startState: string;
     private acceptStates: Set<string>;
     private table: DFATransitionTable;
     private symbols: Set<string>;
 
-    constructor(acceptStates: string[], table: DFATransitionTable) {
+    constructor(startState: string, acceptStates: string[], table: DFATransitionTable) {
+        this.startState = startState;
         this.acceptStates = new Set(acceptStates);
         this.table = table;
-        console.assert("0" in this.table);
         this.symbols = new Set<string>();
         for (const transitions of Object.values(this.table)) {
             for (const symbol of Object.keys(transitions)) {
@@ -29,7 +30,7 @@ class DFA {
     }
 
     accepts(input: string): boolean {
-        let state = "0";
+        let state = this.startState; 
         for (const c of input) {
             const next = this.run(c, state);
             if (next != null) state = next;
@@ -45,7 +46,7 @@ class DFA {
                 table[state][symbol] = [target];
             }
         }
-        return new NFA(Array.from(this.acceptStates), table);
+        return new NFA(this.startState, Array.from(this.acceptStates), table);
     }
 
     // returns a minimized version of this DFA
@@ -93,14 +94,15 @@ class DFA {
             }
         } while (prevEquivs.length != currEquivs.length);
 
-        // TODO: allow start state to have a customizable name saved within the json
-        // for now I explicitly change start state to "0"
+        let startState: string | null = null;
         const newTable: DFATransitionTable = {};
-        // for (let i = 0; i < currEquivs.length; i++) {
         for (const curr of currEquivs) {
             curr.sort();
-            // TODO: hacky way of forcing the start state to be "0", fix this after refactoring
-            const srcKey = curr.includes("0") ? "0" : curr.join(",");
+            // const srcKey = curr.includes("0") ? "0" : curr.join(",");
+            const srcKey = curr.join(",");
+            if (curr.includes(this.startState)) {
+                startState = srcKey;
+            }
             const state = curr[0]!;
             newTable[srcKey] = {};
             for (const symbol of symbols) {
@@ -108,8 +110,7 @@ class DFA {
                 if (!target) continue;
                 const tgtId = belongsTo.get(target)!;
                 const tgtList = currEquivs[tgtId]!.sort();
-                // TODO: hacky way of forcing the start state to be "0", fix this after refactoring
-                const tgtKey = tgtList.includes("0") ? "0" : tgtList.join(",");
+                const tgtKey = tgtList.join(",");
                 if (tgtKey !== undefined) {
                     newTable[srcKey][symbol] = tgtKey;
                 }
@@ -122,8 +123,9 @@ class DFA {
                 newAcceptStates.add(equiv[0]!);
             }
         }
-        
-        return new DFA(Array.from(newAcceptStates), newTable);
+
+        console.assert(startState != null);
+        return new DFA(startState ?? "0", Array.from(newAcceptStates), newTable);
     }
 
     getStates(): string[] {
@@ -152,8 +154,13 @@ class DFA {
         return reachableStates;
     }
 
+    getStartState(): string {
+        return this.startState;
+    }
+
     toJSON(): DFAJson {
         return {
+            startState: this.startState,
             acceptStates: Array.from(this.acceptStates),
             table: this.table,
         };
@@ -162,6 +169,7 @@ class DFA {
 
 type DFATransitionTable = Record<string, Record<string, string>>;
 type DFAJson = {
+    startState: string,
     acceptStates: string[];
     table: DFATransitionTable;
 };

@@ -6,8 +6,9 @@ export type GraphData = {
     links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[];
     nodeLabels: string[];
     linkLabels: string[];
-    acceptStates?: Set<string>;
-    nodeToIndex?: Map<string, number>;
+    startState: string;
+    acceptStates: Set<string>;
+    nodeToIndex: Map<string, number>;
 };
 
 export function getNodeToIndexMap(data: NFAJson): Map<string, number> {
@@ -16,7 +17,7 @@ export function getNodeToIndexMap(data: NFAJson): Map<string, number> {
     for (const node of Object.keys(data.table)) {
         nodeToIndex.set(node, index);
         index++;
-    } 
+    }
     return nodeToIndex;
 }
 
@@ -55,7 +56,11 @@ export function NFAJsonToGraphData(data: NFAJson): GraphData {
         }
     }
 
-    return { nodes, links, nodeLabels, linkLabels, acceptStates: new Set(data.acceptStates), nodeToIndex };
+    return {
+        nodes, links, nodeLabels,
+        linkLabels, startState: data.startState,
+        acceptStates: new Set(data.acceptStates), nodeToIndex
+    };
 }
 
 export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
