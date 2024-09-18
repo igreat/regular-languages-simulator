@@ -22,6 +22,7 @@ class NFA {
                 symbolSet.add(symbol);
             }
         }
+        symbolSet.delete("~");
         this.symbols = Array.from(symbolSet).sort()
     }
 
@@ -91,10 +92,13 @@ class NFA {
             for (const state of srcStates) {
                 if (!this.table[state])
                     continue;
-                for (const [symbol, targets] of Object.entries(this.table[state])) {
+                for (const symbol of this.symbols) {
+                    const targets = this.table[state][symbol] ?? [];
                     if (!transitions[symbol])
                         transitions[symbol] = new Set<string>();
-                    targets.forEach((t) => { transitions[symbol]?.add(t); })
+                    for (const closure of targets.flatMap((t) => this.epsilonClosure(t))) {
+                        closure.forEach((s) => transitions[symbol]?.add(s));
+                    }
                 }
             }
 
@@ -123,6 +127,12 @@ class NFA {
         }
         dfs(state);
         return closure;
+    }
+
+    equals(other: NFA): boolean {
+        const currentDfa = this.toDFA();
+        const otherDfa = other.toDFA();
+        return currentDfa.equals(otherDfa);
     }
 
     getStates(): string[] {

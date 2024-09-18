@@ -197,75 +197,52 @@ describe("Convert NFA that accepts strings ending with 'ab' to equivalent DFA", 
 });
 
 
-// describe("Two NFAs that determine if input contains 'aba' suffix should be equal", () => {
-//     let nfa1: NFA;
-//     let nfa2: NFA;
+describe("Two NFAs that determine if input contains 'aba' suffix should be equal", () => {
+    let nfa1: NFA;
+    let nfa2: NFA;
 
-//     beforeAll(() => {
-//         nfa1 = new NFA([4], {
-//             0: { "~": [1], a: [0], b: [0] },
-//             1: { a: [2] },
-//             2: { b: [3] },
-//             3: { a: [4] },
-//         });
+    beforeAll(() => {
+        nfa1 = new NFA("0", ["4"], {
+            "0": { "~": ["1"], a: ["0"], b: ["0"] },
+            "1": { a: ["2"] },
+            "2": { b: ["3"] },
+            "3": { a: ["4"] },
+        });
 
-//         nfa2 = new NFA([3], {
-//             0: { a: [1], b: [0] },
-//             1: { a: [1], b: [2] },
-//             2: { a: [3], b: [0] },
-//             3: { a: [1], b: [2] }
-//         });
-//     });
+        nfa2 = new NFA("0", ["3"], {
+            "0": { a: ["1"], b: ["0"] },
+            "1": { a: ["1"], b: ["2"] },
+            "2": { a: ["3"], b: ["0"] },
+            "3": { a: ["1"], b: ["2"] }
+        });
+    });
 
-//     test("Both NFAs should accept the same language", () => {
-//         expect(nfa1.equals(nfa2)).toBe(true);
-//     });
-// });
+    test("Both NFAs should accept the same language", () => {
+        expect(nfa1.equals(nfa2)).toBe(true);
+    });
+});
 
-// describe("Two other NFAs that determine if input contains 'aba' suffix should be equal", () => {
-//     let nfa1: NFA;
-//     let nfa2: NFA;
 
-//     beforeAll(() => {
-//         nfa1 = new NFA([3], {
-//             0: { a: [1], b: [0] },
-//             1: { a: [1], b: [2] },
-//             2: { a: [3], b: [0] },
-//             3: { a: [1], b: [2] }
-//         });
+describe("NFA that determine if input contains 'aba' suffix should not be equal to 'bab' suffix", () => {
+    let nfa1: NFA;
+    let nfa2: NFA;
 
-//         nfa2 = new NFA([3], {
-//             0: { a: [0, 1], b: [0] },
-//             1: { b: [2] },
-//             2: { a: [3] }
-//         });
-//     });
+    beforeAll(() => {
+        nfa1 = new NFA("0", ["3"], {
+            "0": { a: ["0", "1"], b: ["0"] },
+            "1": { b: ["2"] },
+            "2": { a: ["3"] }
+        });
 
-//     test("Both NFAs should accept the same language", () => {
-//         expect(nfa1.equals(nfa2)).toBe(true);
-//     });
-// });
+        nfa2 = new NFA("0", ["3"], {
+            "0": { a: ["0"], b: ["0", "1"] },
+            "1": { a: ["2"] },
+            "2": { b: ["3"] }
+        });
+    });
 
-// describe("NFA that determine if input contains 'aba' suffix should not be equal to 'bab' suffix", () => {
-//     let nfa1: NFA;
-//     let nfa2: NFA;
-
-//     beforeAll(() => {
-//         nfa1 = new NFA([3], {
-//             0: { a: [0, 1], b: [0] },
-//             1: { b: [2] },
-//             2: { a: [3] }
-//         });
-
-//         nfa2 = new NFA([3], {
-//             0: { a: [0], b: [0, 1] },
-//             1: { a: [2] },
-//             2: { b: [3] }
-//         });
-//     });
-
-//     test("NFAs should not accept the same language", () => {
-//         expect(nfa1.equals(nfa2)).toBe(false);
-//     });
-// });
+    test("NFAs should not accept the same language", () => {
+        expect(nfa1.equals(nfa2)).toBe(false);
+    });
+});
 

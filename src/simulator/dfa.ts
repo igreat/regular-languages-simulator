@@ -98,8 +98,7 @@ class DFA {
         const newTable: DFATransitionTable = {};
         for (const curr of currEquivs) {
             curr.sort();
-            // const srcKey = curr.includes("0") ? "0" : curr.join(",");
-            const srcKey = curr.join(",");
+            const srcKey = curr.join("-");
             if (curr.includes(this.startState)) {
                 startState = srcKey;
             }
@@ -110,7 +109,7 @@ class DFA {
                 if (!target) continue;
                 const tgtId = belongsTo.get(target)!;
                 const tgtList = currEquivs[tgtId]!.sort();
-                const tgtKey = tgtList.join(",");
+                const tgtKey = tgtList.join("-");
                 if (tgtKey !== undefined) {
                     newTable[srcKey][symbol] = tgtKey;
                 }
@@ -172,14 +171,22 @@ class DFA {
         return new DFA(newStartState, Array.from(newAcceptStates), newTable);
     }
 
+    equals(other: DFA): boolean {
+        const currentDfa = this.minimized().relabeled();
+        const otherDfa = other.minimized().relabeled();
+        const currentJson = currentDfa.toJSON();
+        const otherJson = otherDfa.toJSON();
+        return JSON.stringify(currentJson) === JSON.stringify(otherJson);
+    }
+
     getStates(): string[] {
         return Object.keys(this.table);
     }
 
     // https://en.wikipedia.org/wiki/DFA_minimization
     getReachableStates(): Set<string> {
-        const reachableStates = new Set<string>("0");
-        let newStates = new Set<string>("0");
+        const reachableStates = new Set<string>([this.startState]);
+        let newStates = new Set<string>([this.startState]);
         do {
             const temp = new Set<string>();
             for (const state of newStates) {
