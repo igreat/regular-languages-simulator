@@ -12,10 +12,12 @@
 - [x] Creating DFA from UI textual (table ui)
 - [x] Turn DFA into NFA
 - [x] Simulating NFA from UI
-- [ ] Creating NFA from UI textual (table ui)
-- [ ] Make it so that if there are multiple transitions from one state to another, the link label is shown as a list of symbols
-- [ ] Add ability to check equivalence of two NFAs
-- [ ] Add ability to convert NFA into DFA
+- [x] Creating NFA from UI textual (table ui)
+- [x] Make it so that if there are multiple transitions from one state to another, the link label is shown as a list of symbols
+- [x] Add ability to convert NFA into DFA
+- [x] Add ability to minimize DFA
+- [x] Add ability to minimally and consistently relabel DFA (equivalent DFAs get the same relabeling)
+- [x] Add ability to check equivalence of two NFAs
 - [ ] Add ability to convert regex into NFA
 - [ ] Add ability to convert NFA into regex
 - [ ] Saving and loading DFA/NFA from database (Vercel Postgres)

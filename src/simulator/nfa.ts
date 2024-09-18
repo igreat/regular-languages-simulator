@@ -135,6 +135,15 @@ class NFA {
         return currentDfa.equals(otherDfa);
     }
 
+    isDFA(): boolean {
+        for (const transitions of Object.values(this.table)) {
+            if (Object.entries(transitions)
+                .some(([symbol, targets]) => symbol === "~" || targets.length > 1))
+                return false;
+        }
+        return true;
+    }
+
     getStates(): string[] {
         // return a copy of the states
         return [...this.states];

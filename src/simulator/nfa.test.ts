@@ -196,6 +196,28 @@ describe("Convert NFA that accepts strings ending with 'ab' to equivalent DFA", 
     });
 });
 
+test("NFA is DFA", () => {
+    const nfa = new NFA("0", ["3"], {
+        "0": { a: ["1"], b: ["0"] },
+        "1": { a: ["1"], b: ["2"] },
+        "2": { a: ["3"], b: ["0"] },
+        "3": { a: ["1"], b: ["2"] }
+    });
+
+    expect(nfa.isDFA()).toBe(true);
+});
+
+test("NFA is not DFA", () => {
+    const nfa = new NFA("0", ["4"], {
+        "0": { "~": ["1"], a: ["0"], b: ["0"] },
+        "1": { a: ["2"] },
+        "2": { b: ["3"] },
+        "3": { a: ["4"] },
+    });
+
+    expect(nfa.isDFA()).toBe(false);
+});
+
 
 describe("Two NFAs that determine if input contains 'aba' suffix should be equal", () => {
     let nfa1: NFA;
