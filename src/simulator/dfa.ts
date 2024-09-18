@@ -1,3 +1,4 @@
+import { Queue } from "@datastructures-js/queue";
 import { NFA } from "./nfa";
 
 class DFA {
@@ -30,7 +31,7 @@ class DFA {
     }
 
     accepts(input: string): boolean {
-        let state = this.startState; 
+        let state = this.startState;
         for (const c of input) {
             const next = this.run(c, state);
             if (next != null) state = next;
@@ -50,7 +51,6 @@ class DFA {
     }
 
     // returns a minimized version of this DFA
-    // https://en.wikipedia.org/wiki/DFA_minimization
     minimized(): DFA {
         const symbols = Array.from(this.symbols);
         const states = this.getReachableStates();
@@ -116,7 +116,7 @@ class DFA {
                 }
             }
         }
-        
+
         const newAcceptStates = new Set<string>();
         for (const equiv of currEquivs) {
             if (equiv.some((state) => this.acceptStates.has(state))) {
@@ -128,10 +128,55 @@ class DFA {
         return new DFA(startState ?? "0", Array.from(newAcceptStates), newTable);
     }
 
+    /* 
+    relabels DFA in a consistent and efficient way such that structurally equivalent DFAs 
+    will end up with equivalent labels
+    */
+    relabeled(): DFA {
+        const newLabels = new Map<string, string>();
+        const symbols = Array.from(this.symbols).sort();
+        let curr = 0;
+        const queue = new Queue<string>([this.startState]);
+        const visited = new Set<string>();
+        while (!queue.isEmpty()) {
+            const state = queue.pop();
+            if (visited.has(state))
+                continue;
+            visited.add(state);
+            newLabels.set(state, curr.toString());
+            curr++;
+
+            for (const symbol of symbols) {
+                const nextState = this.table[state]?.[symbol];
+                if (nextState)
+                    queue.push(nextState);
+            }
+        }
+
+        const newTable: DFATransitionTable = {};
+        for (const [src, transitions] of Object.entries(this.table)) {
+            const srcLabel = newLabels.get(src)!;
+            newTable[srcLabel] = {};
+            for (const [symbol, target] of Object.entries(transitions)) {
+                const tgtLabel = newLabels.get(target)!;
+                newTable[srcLabel][symbol] = tgtLabel;
+            }
+        }
+
+        const newStartState = newLabels.get(this.startState)!;
+        const newAcceptStates = new Set<string>();
+        this.acceptStates.forEach((state) => {
+            newAcceptStates.add(newLabels.get(state)!);
+        });
+
+        return new DFA(newStartState, Array.from(newAcceptStates), newTable);
+    }
+
     getStates(): string[] {
         return Object.keys(this.table);
     }
 
+    // https://en.wikipedia.org/wiki/DFA_minimization
     getReachableStates(): Set<string> {
         const reachableStates = new Set<string>("0");
         let newStates = new Set<string>("0");

@@ -199,7 +199,7 @@ describe("DFA minimizes to correct DFA 1", () => {
     test("Minimized DFA should accept same strings as the initial DFA", () => {
         const testCases = [
             "", "0", "1", "00", "01", "10", "11", "000", "001", "010", "011", "100", "101", "110", "111",
-            "0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", 
+            "0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011",
             "1100", "1101", "1110", "1111"
         ]
 
@@ -237,7 +237,7 @@ describe("DFA minimizes to correct DFA 1", () => {
     test("Minimized DFA should accept same strings as the initial DFA", () => {
         const testCases = [
             "", "0", "1", "00", "01", "10", "11", "000", "001", "010", "011", "100", "101", "110", "111",
-            "0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011", 
+            "0000", "0001", "0010", "0011", "0100", "0101", "0110", "0111", "1000", "1001", "1010", "1011",
             "1100", "1101", "1110", "1111"
         ]
 
@@ -245,6 +245,52 @@ describe("DFA minimizes to correct DFA 1", () => {
             const initialAccepts = initialDfa.accepts(input);
             const minimizedAccepts = minimizedDfa.accepts(input);
             expect(minimizedAccepts).toBe(initialAccepts);
+        });
+    });
+});
+
+describe("DFA relabels to the right DFA", () => {
+    let initialDfa: DFA;
+    let relabeledDfa: DFA;
+    let targetDfa: DFA;
+
+    beforeAll(() => {
+        initialDfa = new DFA("XXX", ["XYZ"], {
+            "XXX": { a: "YYY", b: "XXX" },
+            "YYY": { a: "YYY", b: "ZZZ" },
+            "ZZZ": { a: "XYZ", b: "XXX" },
+            "XYZ": { a: "YYY", b: "ZZZ" }
+        });
+        relabeledDfa = initialDfa.relabeled();
+        targetDfa = new DFA("0", ["3"], {
+            "0": { a: "1", b: "0" },
+            "1": { a: "1", b: "2" },
+            "2": { a: "3", b: "0" },
+            "3": { a: "1", b: "2" }
+        });
+    });
+
+    test("Relabeled DFA structure matches the target DFA", () => {
+        const relabeledDFAJson = relabeledDfa.toJSON();
+        const targetDFAJson = targetDfa.toJSON();
+
+        // Compare accepting states
+        expect(relabeledDFAJson.acceptStates.sort()).toEqual(targetDFAJson.acceptStates.sort());
+
+        // Compare transition tables
+        expect(relabeledDFAJson.table).toEqual(targetDFAJson.table);
+    });
+
+    test("Relabeled DFA accepts the same strings as the target DFA", () => {
+        const testCases = [
+            "", "a", "b", "aa", "ab", "ba", "bb", "aaa", "aab", "aba", "abb", "baa", "bab", "bba", "bbb",
+            "aaaa", "aaab", "aaba", "aabb", "abaa", "abab", "abba", "abbb", "baaa", "baab", "baba", "babb",
+        ];
+
+        testCases.forEach((input) => {
+            const relabeledAccepts = relabeledDfa.accepts(input);
+            const targetAccepts = targetDfa.accepts(input);
+            expect(relabeledAccepts).toBe(targetAccepts);
         });
     });
 });
