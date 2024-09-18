@@ -7,9 +7,9 @@ type InputTableProps = {
     initialNFA?: NFAJson;
 };
 
-function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
+function InputTable({ onNFAChange, initialNFA }: InputTableProps) {
     const [states, setStates] = React.useState<string[]>([]);
-    const [startState, setStartState] = React.useState<string>(""); // if not provided, default to first state in `states`
+    const [startState, setStartState] = React.useState<string>(""); // if not provided, default to first state in states
     const [statesSet, setStatesSet] = React.useState<Set<string>>(new Set());
     const [inputSymbols, setInputSymbols] = React.useState<string[]>([]);
     const [acceptStates, setAcceptStates] = React.useState<string[]>([]);
@@ -113,6 +113,8 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
             <table className="min-w-full border border-gray-700">
                 <thead>
                     <tr>
+                        {/* New Header for Start State */}
+                        <th className="border border-gray-700 px-2 py-1">Start</th>
                         <th className="border border-gray-700 px-2 py-1">State</th>
                         {inputSymbols.map((sym) => (
                             <th key={sym} className="border border-gray-700 px-2 py-1">
@@ -129,6 +131,18 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                             key={state}
                             className={acceptStates.includes(state) ? "bg-green-700" : ""}
                         >
+                            {/* New Cell with Radio Button */}
+                            <td className="border border-gray-700 px-2 py-1 text-center">
+                                <input
+                                    type="radio"
+                                    name="startState"
+                                    checked={startState === state}
+                                    onChange={() => setStartState(state)}
+                                    className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600"
+                                    aria-label={`Set ${state} as start state`}
+                                    title="Set as Start State"
+                                />
+                            </td>
                             <td className="border border-gray-700 px-2 py-1">{state}</td>
                             {inputSymbols.map((sym) => (
                                 <td key={sym} className="border border-gray-700 px-2 py-1 text-center">
@@ -136,7 +150,7 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                         type="text"
                                         value={tableText[state]?.[sym] ?? ""}
                                         className="w-full bg-gray-700 text-white px-1 py-0.5 rounded"
-                                        placeholder={`∅`}
+                                        placeholder="∅"
                                         onChange={(e) => {
                                             const newTableText = { ...tableText };
                                             if (!newTableText[state]) newTableText[state] = {};
@@ -210,6 +224,8 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                         </tr>
                     ))}
                     <tr>
+                        {/* Empty Cell for Start State Column */}
+                        <td className="border border-gray-700 px-2 py-1"></td>
                         <td className="bg-blue-500 border border-gray-700">
                             <button
                                 onClick={() => {
@@ -224,6 +240,11 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                                     // Also add a new entry to tableText
                                     const newTableText = { ...tableText };
                                     newTableText[newState] = {};
+                                    setTableText(newTableText);
+                                    // If it's the first state being added, set it as start state
+                                    if (newStates.length === 1) {
+                                        setStartState(newState);
+                                    }
                                 }}
                                 className="text-white px-0.5 font-bold text-xl w-full"
                                 title="Add State"
@@ -239,6 +260,8 @@ function DFAInputTable({ onNFAChange, initialNFA }: InputTableProps) {
                     </tr>
                     {/* delete symbol row  */}
                     <tr>
+                        {/* Empty Cell for Start State Column */}
+                        <td className="border border-gray-700 px-2 py-1"></td>
                         <td className="border border-gray-700 px-2 py-1"></td>
                         {inputSymbols.map((sym) => (
                             <td key={sym} className="bg-red-800 border border-black">
@@ -303,4 +326,4 @@ function validateTableText(tableText: Record<string, Record<string, string>>, st
     return table;
 }
 
-export default DFAInputTable;
+export default InputTable;
