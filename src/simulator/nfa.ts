@@ -1,6 +1,7 @@
 import { Queue } from "@datastructures-js/queue";
 import { DFA } from "./dfa";
 import type { DFATransitionTable } from "./dfa";
+import { Char, Concat, Union, Star, EmptyString, EmptySet, Regex } from "./regex";
 
 class NFA {
     private startState: string;
@@ -184,6 +185,14 @@ class NFA {
         });
 
         return new NFA(newStartState, Array.from(newAcceptStates), newTable);
+    }
+
+    toRegex(): Regex {
+        // TODO: implement this
+        // this will need to be step by step so I can actually visualize each step
+        // I might need a GNFA distinct type, but I'm not sure yet
+
+        return new EmptyString();
     }
 
     getStates(): string[] {
