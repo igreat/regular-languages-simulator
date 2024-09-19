@@ -14,18 +14,12 @@ class Concat extends Regex {
     match(input: string): boolean {
         return true;
     }
-    
+
     toNFA(): NFA {
         const left_nfa = this.left.toNFA();
         const right_nfa = this.right.toNFA();
-        const left_table = left_nfa.getTable();
-        const right_table = right_nfa.getTable();
-        // the new accept state is the accept state of the right NFA
-        const acceptStates = right_nfa.getAcceptStates();
-        // and the new start state is the start state of the left NFA
-        const startState = left_nfa.getStartState();
         const table: NFATransitionTable = {};
-
+        
         // ensure no state is named the same
         const labelsLeft = new Map<string, string>();
         let curr = 0;
@@ -34,12 +28,13 @@ class Concat extends Regex {
             curr++;
         }
         const labelsRight = new Map<string, string>();
-        for  (const state of right_nfa.getStates()) {
+        for (const state of right_nfa.getStates()) {
             labelsRight.set(state, curr.toString());
             curr++;
         }
-
+        
         // copy left table
+        const left_table = left_nfa.getTable();
         for (const [src, transitions] of Object.entries(left_table)) {
             const srcLabel = labelsLeft.get(src)!;
             table[srcLabel] = {};
@@ -47,8 +42,9 @@ class Concat extends Regex {
                 table[srcLabel][symbol] = targets.map((target) => labelsLeft.get(target)!);
             }
         }
-
+        
         // copy right table
+        const right_table = right_nfa.getTable();
         for (const [src, transitions] of Object.entries(right_table)) {
             const srcLabel = labelsRight.get(src)!;
             table[srcLabel] = {};
@@ -69,6 +65,8 @@ class Concat extends Regex {
             table[labelsLeft.get(state)!]!["~"]!.push(labelsRight.get(right_nfa.getStartState())!);
         }
 
+        const startState = labelsLeft.get(left_nfa.getStartState())!;
+        const acceptStates = right_nfa.getAcceptStates().map((state) => labelsRight.get(state)!);
         return new NFA(startState, acceptStates, table);
     }
 
@@ -87,6 +85,55 @@ class Union extends Regex {
 
     match(input: string): boolean {
         return true;
+    }
+
+    toNFA(): NFA {
+        const left_nfa = this.left.toNFA();
+        const right_nfa = this.right.toNFA();
+        const table: NFATransitionTable = {};
+
+        // ensure no state is named the same
+        const labelsLeft = new Map<string, string>();
+        let curr = 1;
+        for (const state of left_nfa.getStates()) {
+            labelsLeft.set(state, curr.toString());
+            curr++;
+        }
+        const labelsRight = new Map<string, string>();
+        for (const state of right_nfa.getStates()) {
+            labelsRight.set(state, curr.toString());
+            curr++;
+        }
+
+        // copy left table
+        const left_table = left_nfa.getTable();
+        for (const [src, transitions] of Object.entries(left_table)) {
+            const srcLabel = labelsLeft.get(src)!;
+            table[srcLabel] = {};
+            for (const [symbol, targets] of Object.entries(transitions)) {
+                table[srcLabel][symbol] = targets.map((target) => labelsLeft.get(target)!);
+            }
+        }
+
+        // copy right table
+        const right_table = right_nfa.getTable();
+        for (const [src, transitions] of Object.entries(right_table)) {
+            const srcLabel = labelsRight.get(src)!;
+            table[srcLabel] = {};
+            for (const [symbol, targets] of Object.entries(transitions)) {
+                table[srcLabel][symbol] = targets.map((target) => labelsRight.get(target)!);
+            }
+        }
+
+        // new start state with epsilon transition to both start states
+        const startState = "0";
+        table[startState] = { "~": [labelsLeft.get(left_nfa.getStartState())!, labelsRight.get(right_nfa.getStartState())!] };
+
+        // new accept states
+        const acceptStates = left_nfa.getAcceptStates().map((state) => labelsLeft.get(state)!);
+        acceptStates.push(...right_nfa.getAcceptStates().map((state) => labelsRight.get(state)!));
+
+        return new NFA(startState, acceptStates, table);
     }
 
     equals(other: Regex): boolean {
