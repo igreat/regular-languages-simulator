@@ -193,6 +193,18 @@ class NFA {
         return this.startState;
     }
 
+    getAcceptStates(): string[] {
+        return Array.from(this.acceptStates);
+    }
+
+    getSymbols(): string[] {
+        return [...this.symbols];
+    }
+
+    getTable(): NFATransitionTable {
+        return JSON.parse(JSON.stringify(this.table));
+    }
+
     toJSON(): NFAJson {
         return {
             startState: this.startState,
