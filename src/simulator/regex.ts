@@ -153,7 +153,38 @@ class Star extends Regex {
     }
 
     toNFA(): NFA {
-        
+        const startState = "0";
+        // all states now are +1 to offset new start state
+        const inner_nfa = this.inner.toNFA();
+        const table: NFATransitionTable = {};
+
+        // copy table
+        const inner_table = inner_nfa.getTable();
+        for (const [src, transitions] of Object.entries(inner_table)) {
+            const srcLabel = (parseInt(src) + 1).toString();
+            table[srcLabel] = {};
+            for (const [symbol, targets] of Object.entries(transitions)) {
+                table[srcLabel][symbol] = targets.map((target) => (parseInt(target) + 1).toString());
+            }
+        }
+
+        // epsilon transition from start state to old start state
+        table[startState] = { "~": [inner_nfa.getStartState()] };
+
+        // epsilon transition from all accept states to old start state
+        for (const state of inner_nfa.getAcceptStates()) {
+            if (!table[(parseInt(state) + 1).toString()]) {
+                table[(parseInt(state) + 1).toString()] = { "~": [] };
+            }
+            if (!table[(parseInt(state) + 1).toString()]?.["~"]) {
+                table[(parseInt(state) + 1).toString()]!["~"] = [];
+            }
+
+            table[(parseInt(state) + 1).toString()]!["~"]!.push(inner_nfa.getStartState());
+        }
+
+        const acceptStates = inner_nfa.getAcceptStates().map((state) => (parseInt(state) + 1).toString());
+        return new NFA(startState, acceptStates, table);
     }
 
     equals(other: Regex): boolean {
