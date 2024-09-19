@@ -192,6 +192,14 @@ class EmptyString extends Regex {
         return input.length === 0;
     }
 
+    toNFA(): NFA {
+        const startState = "0";
+        const acceptStates = ["0"];
+        const table: NFATransitionTable = {};
+
+        return new NFA(startState, acceptStates, table);
+    }
+
     equals(other: Regex): boolean {
         return other instanceof EmptyString;
     }
@@ -200,6 +208,14 @@ class EmptyString extends Regex {
 class EmptySet extends Regex {
     match(_input: string): boolean {
         return false; // Empty never matches anything
+    }
+
+    toNFA(): NFA {
+        const startState = "0";
+        const acceptStates: string[] = [];
+        const table: NFATransitionTable = {};
+
+        return new NFA(startState, acceptStates, table);
     }
 
     equals(other: Regex): boolean {
