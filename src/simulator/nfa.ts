@@ -13,15 +13,17 @@ class NFA {
         this.startState = startState;
         this.acceptStates = new Set(acceptStates);
         this.table = table;
-        this.states = [];
+        const states = new Set<string>();
 
         const symbolSet = new Set<string>();
         for (const [state, transitions] of Object.entries(this.table)) {
-            this.states.push(state);
-            for (const symbol of Object.keys(transitions)) {
+            states.add(state);
+            for (const [symbol, targets] of Object.entries(transitions)) {
                 symbolSet.add(symbol);
+                targets.forEach((target) => { states.add(target) });
             }
         }
+        this.states = Array.from(states).sort();
         symbolSet.delete("~");
         this.symbols = Array.from(symbolSet).sort()
     }
@@ -202,7 +204,7 @@ class NFA {
     }
 
     getTable(): NFATransitionTable {
-        return JSON.parse(JSON.stringify(this.table));
+        return JSON.parse(JSON.stringify(this.table)) as NFATransitionTable;
     }
 
     toJSON(): NFAJson {

@@ -1,4 +1,5 @@
-import { NFA, NFATransitionTable } from "./nfa";
+import { NFA } from "./nfa";
+import type { NFATransitionTable } from "./nfa";
 
 abstract class Regex {
     abstract match(input: string): boolean; // not necessary for now
@@ -169,7 +170,8 @@ class Star extends Regex {
         }
 
         // epsilon transition from start state to old start state
-        table[startState] = { "~": [inner_nfa.getStartState()] };
+        const oldStart = (parseInt(inner_nfa.getStartState()) + 1).toString()
+        table[startState] = { "~": [oldStart] };
 
         // epsilon transition from all accept states to old start state
         for (const state of inner_nfa.getAcceptStates()) {
@@ -180,10 +182,11 @@ class Star extends Regex {
                 table[(parseInt(state) + 1).toString()]!["~"] = [];
             }
 
-            table[(parseInt(state) + 1).toString()]!["~"]!.push(inner_nfa.getStartState());
+            table[(parseInt(state) + 1).toString()]!["~"]!.push(oldStart);
         }
 
         const acceptStates = inner_nfa.getAcceptStates().map((state) => (parseInt(state) + 1).toString());
+        acceptStates.push("0");
         return new NFA(startState, acceptStates, table);
     }
 
@@ -194,7 +197,7 @@ class Star extends Regex {
 }
 
 class Char extends Regex {
-    constructor(public value: string | "~") {
+    constructor(public value: string) {
         super();
     }
 
@@ -256,31 +259,30 @@ class EmptySet extends Regex {
 
 function parseRegex(input: string): Regex {
     input = insertImplicitConcats(input);
-    console.log(input);
 
-    let operations: string[] = [];
-    let operands: Regex[] = [];
-    for (let i = 0; i < input.length; i++) {
-        switch (input[i]) {
+    const operations: string[] = [];
+    const operands: Regex[] = [];
+    for (const c of input) {
+        switch (c) {
             case "*":
                 operands.push(new Star(operands.pop()!));
                 break;
             case ")":
                 while (operations.length > 0 && operations.at(-1) !== "(") {
-                    let operation = operations.pop()!;
+                    const operation = operations.pop()!;
                     console.assert(operation === "|", "Expected union operation");
-                    let right = operands.pop()!;
+                    const right = operands.pop()!;
                     operands.push(new Union(operands.pop()!, right));
                 }
                 operations.pop(); // remove the last (
                 break;
             case "(":
-                operations.push(input[i]!);
+                operations.push(c);
                 break;
             case "|":
             case "^":
                 processConcat(operands, operations);
-                operations.push(input[i]!);
+                operations.push(c);
                 break;
             case "~":
                 operands.push(new EmptyString());
@@ -289,7 +291,7 @@ function parseRegex(input: string): Regex {
                 operands.push(new EmptySet());
                 break;
             default:
-                operands.push(new Char(input[i]!));
+                operands.push(new Char(c));
         }
     }
 
@@ -298,7 +300,7 @@ function parseRegex(input: string): Regex {
     // what's left is necessarily a sequence of unions (all concatenations have been processed)
     let final_expression = operands.pop()!;
     while (operands.length > 0) {
-        let left = operands.pop()!;
+        const left = operands.pop()!;
         final_expression = new Union(left, final_expression);
     }
 
@@ -310,8 +312,8 @@ function processConcat(operands: Regex[], operations: string[]): void {
         return;
 
     // useful because I always want to immediately concatenate
-    let right = operands.pop()!;
-    let left = operands.pop()!;
+    const right = operands.pop()!;
+    const left = operands.pop()!;
     if (left instanceof Char && left.value === "~") {
         operands.push(right);
     } else {
@@ -321,7 +323,7 @@ function processConcat(operands: Regex[], operations: string[]): void {
 }
 
 function insertImplicitConcats(input: string): string {
-    let output: string[] = [];
+    const output: string[] = [];
     for (let i = 0; i < input.length; i++) {
         output.push(input[i]!);
         if (i < input.length - 1 &&
