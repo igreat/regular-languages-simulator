@@ -152,6 +152,10 @@ class Star extends Regex {
         return true;
     }
 
+    toNFA(): NFA {
+        
+    }
+
     equals(other: Regex): boolean {
         return other instanceof Star
             && this.inner.equals(other.inner);
@@ -165,6 +169,16 @@ class Char extends Regex {
 
     match(input: string): boolean {
         return true;
+    }
+
+    toNFA(): NFA {
+        const startState = "0";
+        const acceptStates = ["1"];
+        const table: NFATransitionTable = {
+            "0": { [this.value]: ["1"] }
+        };
+
+        return new NFA(startState, acceptStates, table);
     }
 
     equals(other: Regex): boolean {
