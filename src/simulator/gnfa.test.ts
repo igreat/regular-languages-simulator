@@ -21,7 +21,7 @@ describe("NFA that accepts even number of 0s or even number of 1s converted to G
         targetGnfa = new GNFA("ST", "AC", {
             "ST": {
                 "0": new EmptyString(), "1": new EmptySet(),
-                "2": new EmptySet(), "3": new EmptyString(),
+                "2": new EmptySet(), "3": new EmptySet(),
                 "4": new EmptySet(), "AC": new EmptySet()
             },
             "0": {

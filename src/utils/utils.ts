@@ -1,5 +1,6 @@
 import type { NFAJson } from "~/simulator/nfa";
 import type * as d3 from "d3";
+import { GNFAJson } from "~/simulator/gnfa";
 
 export type GraphData = {
     nodes: d3.SimulationNodeDatum[];
@@ -11,7 +12,7 @@ export type GraphData = {
     nodeToIndex: Map<string, number>;
 };
 
-export function getNodeToIndexMap(data: NFAJson): Map<string, number> {
+function NFAJsonToNodeToIndexMap(data: NFAJson): Map<string, number> {
     let index = 0;
     const nodeToIndex = new Map<string, number>();
     for (const node of Object.keys(data.table)) {
@@ -23,7 +24,7 @@ export function getNodeToIndexMap(data: NFAJson): Map<string, number> {
 
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
-    const nodeToIndex = getNodeToIndexMap(data);
+    const nodeToIndex = NFAJsonToNodeToIndexMap(data);
     const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
     for (const [node, index] of nodeToIndex) {
         nodeLabels[index] = node.toString()
@@ -60,6 +61,52 @@ export function NFAJsonToGraphData(data: NFAJson): GraphData {
         nodes, links, nodeLabels,
         linkLabels, startState: data.startState,
         acceptStates: new Set(data.acceptStates), nodeToIndex
+    };
+}
+
+function GNFAJsonToNodeToIndexMap(data: GNFAJson): Map<string, number> {
+    let index = 0;
+    const nodeToIndex = new Map<string, number>();
+    for (const [src, transitions] of Object.entries(data.table)) {
+        if (!nodeToIndex.has(src)) {
+            nodeToIndex.set(src, index);
+            index++;
+        }
+        for (const [tgt, _] of Object.entries(transitions)) {
+            if (!(nodeToIndex.has(tgt))) {
+                nodeToIndex.set(tgt, index);
+                index++;
+            }
+        }
+    }
+    return nodeToIndex;
+}
+
+
+export function GNFAJsonToGraphData(data: GNFAJson): GraphData {
+    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
+    const nodeToIndex = GNFAJsonToNodeToIndexMap(data);
+    const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
+    for (const [node, index] of nodeToIndex) {
+        nodeLabels[index] = node.toString()
+    }
+
+    // GNFA is a bit simpler here, the table is src -> tgt -> linkLabel
+    const links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[] = [];
+    const linkLabels: string[] = [];
+    for (const [source, transitions] of Object.entries(data.table)) {
+        const srcIndex = nodeToIndex.get(source) ?? 0;
+        for (const [target, regex] of Object.entries(transitions)) {
+            const tgtIndex = nodeToIndex.get(target) ?? 0;
+            links.push({ source: srcIndex, target: tgtIndex });
+            linkLabels.push(regex);
+        }
+    }
+
+    return {
+        nodes, links, nodeLabels, linkLabels,
+        startState: data.startState,
+        acceptStates: new Set([data.acceptState]), nodeToIndex
     };
 }
 

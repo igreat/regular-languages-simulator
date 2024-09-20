@@ -1,5 +1,5 @@
 import { NFA } from "./nfa";
-import { Regex, Union, Concat, Star, EmptySet, EmptyString, Char } from "./regex";
+import { Regex, Union, Concat, Star, EmptySet, EmptyString, Char, parseRegex } from "./regex";
 
 class GNFA {
     private startState: string;
@@ -40,11 +40,7 @@ class GNFA {
             for (const [symbol, tgts] of Object.entries(nfa.getTable()[src]!)) {
                 const regex = symbol === "~" ? new EmptyString() : new Char(symbol);
                 for (const tgt of tgts) {
-                    if (table[src]![tgt] instanceof EmptySet) {
-                        table[src]![tgt] = regex;
-                    } else {
-                        table[src]![tgt] = new Union(table[src]![tgt]!, regex);
-                    }
+                    table[src]![tgt] = (new Union(table[src]![tgt]!, regex)).simplify();
                 }
             }
         }
@@ -67,6 +63,17 @@ class GNFA {
         }
 
         return new GNFA(startState, acceptState, table);
+    }
+
+    fromJSON(json: GNFAJson): GNFA {
+        const table: GNFATransitionTable = {};
+        for (const [src, transitions] of Object.entries(json.table)) {
+            table[src] = {};
+            for (const [tgt, regex] of Object.entries(transitions)) {
+                table[src][tgt] = parseRegex(regex);
+            }
+        }
+        return new GNFA(json.startState, json.acceptState, table);
     }
 
     reduced(to_remove?: string): GNFA {
@@ -150,7 +157,7 @@ class GNFA {
             for (const tgt of this.states) {
                 if (!this.table[src] || !this.table[src][tgt]) continue;
                 const regex = this.table[src][tgt];
-                if (!(regex instanceof EmptySet)) {
+                if (!(regex instanceof EmptySet)) { // might change this later, for now I'm just not showing EmptySet
                     regexes[src] = regexes[src] || {};
                     regexes[src][tgt] = regex.toString();
                 }
@@ -163,7 +170,7 @@ class GNFA {
         return {
             startState: this.startState,
             acceptState: this.acceptState,
-            table: this.table
+            table: this.getRegexStrings()
         };
     }
 }
@@ -176,7 +183,8 @@ type GNFATransitionTable = Record<string, Record<string, Regex>>;
 type GNFAJson = {
     startState: string,
     acceptState: string,
-    table: GNFATransitionTable;
+    table: Record<string, Record<string, string>> // src -> tgt -> regex
 };
 
 export { GNFA };
+export type { GNFATransitionTable, GNFAJson };

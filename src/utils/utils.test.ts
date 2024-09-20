@@ -1,13 +1,14 @@
 import type { NFAJson } from "~/simulator/nfa";
 import type { GraphData } from "./utils";
-import { getNodeToIndexMap, NFAJsonToGraphData } from "./utils";
+import { GNFAJsonToGraphData, NFAJsonToGraphData } from "./utils";
+import { GNFAJson } from "~/simulator/gnfa";
 
 describe("NFAJsonToGraphData", () => {
     let json: NFAJson;
     let data: GraphData;
-    let nodeToIndex: Map<string, number>;
     beforeAll(() => {
         json = {
+            startState: "0",
             acceptStates: ["1", "3"],
             table: {
                 "0": { "~": ["1", "3"] },
@@ -18,7 +19,6 @@ describe("NFAJsonToGraphData", () => {
             },
         };
         data = NFAJsonToGraphData(json);
-        nodeToIndex = getNodeToIndexMap(json);
     });
 
     test("Correct number of nodes", () => {
@@ -39,16 +39,55 @@ describe("NFAJsonToGraphData", () => {
 
     test("Correct links", () => {
         expect(data.links).toEqual([
-            { source: nodeToIndex.get("0"), target: nodeToIndex.get("1") },
-            { source: nodeToIndex.get("0"), target: nodeToIndex.get("3") },
-            { source: nodeToIndex.get("1"), target: nodeToIndex.get("2") },
-            { source: nodeToIndex.get("1"), target: nodeToIndex.get("1") },
-            { source: nodeToIndex.get("2"), target: nodeToIndex.get("1") },
-            { source: nodeToIndex.get("2"), target: nodeToIndex.get("2") },
-            { source: nodeToIndex.get("3"), target: nodeToIndex.get("3") },
-            { source: nodeToIndex.get("3"), target: nodeToIndex.get("4") },
-            { source: nodeToIndex.get("4"), target: nodeToIndex.get("4") },
-            { source: nodeToIndex.get("4"), target: nodeToIndex.get("3") },
+            { source: data.nodeToIndex.get("0"), target: data.nodeToIndex.get("1") },
+            { source: data.nodeToIndex.get("0"), target: data.nodeToIndex.get("3") },
+            { source: data.nodeToIndex.get("1"), target: data.nodeToIndex.get("2") },
+            { source: data.nodeToIndex.get("1"), target: data.nodeToIndex.get("1") },
+            { source: data.nodeToIndex.get("2"), target: data.nodeToIndex.get("1") },
+            { source: data.nodeToIndex.get("2"), target: data.nodeToIndex.get("2") },
+            { source: data.nodeToIndex.get("3"), target: data.nodeToIndex.get("3") },
+            { source: data.nodeToIndex.get("3"), target: data.nodeToIndex.get("4") },
+            { source: data.nodeToIndex.get("4"), target: data.nodeToIndex.get("4") },
+            { source: data.nodeToIndex.get("4"), target: data.nodeToIndex.get("3") },
         ]);
+    });
+});
+
+describe("GNFAJsonToGraphData", () => {
+    let json: GNFAJson;
+    let data: GraphData;
+    beforeAll(() => {
+        json = {
+            startState: "ST",
+            acceptState: "AC",
+            table: {
+                "0": { "1": "~", "3": "~" },
+                "1": { "1": "1", "2": "(0|1)", AC: "~" },
+                "2": { "1": "0", "2": "1" },
+                "3": { "3": "0", "4": "1", AC: "~" },
+                "4": { "3": "1", "4": "0" },
+                ST: { "0": "~" },
+            },
+        };
+
+        data = GNFAJsonToGraphData(json);
+        console.log(data);
+    });
+
+    test("Correct number of nodes", () => {
+        expect(data.nodes.length).toBe(6);
+    });
+
+    test("Correct node labels", () => {
+        expect(data.nodeLabels.sort()).toEqual(["AC", "0", "1", "2", "3", "4", "ST"].sort());
+    });
+
+    test("Correct link labels", () => {
+        expect(data.linkLabels.sort()).toEqual([
+            "(0|1)",
+            "0", "0", "0",
+            "1", "1", "1", "1",
+            "~", "~", "~", "~", "~"
+        ].sort());
     });
 });
