@@ -4,7 +4,9 @@ import type { NFATransitionTable } from "./nfa";
 abstract class Regex {
     abstract match(input: string): boolean; // not necessary for now
     abstract toNFA(): NFA;
+    abstract simplify(): Regex;
     abstract equals(other: Regex): boolean;
+    abstract toString(): string;
 }
 
 class Concat extends Regex {
@@ -71,11 +73,28 @@ class Concat extends Regex {
         return new NFA(startState, acceptStates, table);
     }
 
+    simplify(): Regex {
+        const left = this.left.simplify();
+        const right = this.right.simplify();
+        if (left instanceof EmptySet || right instanceof EmptySet) {
+            return new EmptySet();
+        } else if (left instanceof EmptyString) {
+            return right;
+        } else if (right instanceof EmptyString) {
+            return left;
+        } else {
+            return new Concat(left, right);
+        }
+    }
 
     equals(other: Regex): boolean {
         return other instanceof Concat
             && this.left.equals(other.left)
             && this.right.equals(other.right);
+    }
+
+    toString(): string {
+        return `(${this.left.toString()}${this.right.toString()})`;
     }
 }
 
@@ -137,10 +156,28 @@ class Union extends Regex {
         return new NFA(startState, acceptStates, table);
     }
 
+    simplify(): Regex {
+        const left = this.left.simplify();
+        const right = this.right.simplify();
+        if (left instanceof EmptyString || right instanceof EmptyString) {
+            return new EmptyString();
+        } else if (left instanceof EmptySet) {
+            return right;
+        } else if (right instanceof EmptySet) {
+            return left;
+        } else {
+            return new Union(left, right);
+        }
+    }
+
     equals(other: Regex): boolean {
         return other instanceof Union
             && this.left.equals(other.left)
             && this.right.equals(other.right);
+    }
+
+    toString(): string {
+        return `(${this.left.toString()}|${this.right.toString()})`;
     }
 }
 
@@ -190,9 +227,22 @@ class Star extends Regex {
         return new NFA(startState, acceptStates, table);
     }
 
+    simplify(): Regex {
+        const inner = this.inner.simplify();
+        if (inner instanceof EmptyString || inner instanceof EmptySet) {
+            return new EmptyString();
+        } else {
+            return new Star(inner);
+        }
+    }
+
     equals(other: Regex): boolean {
         return other instanceof Star
             && this.inner.equals(other.inner);
+    }
+
+    toString(): string {
+        return `${this.inner.toString()}*`;
     }
 }
 
@@ -215,9 +265,17 @@ class Char extends Regex {
         return new NFA(startState, acceptStates, table);
     }
 
+    simplify(): Regex {
+        return this;
+    }
+
     equals(other: Regex): boolean {
         return other instanceof Char
             && this.value === other.value;
+    }
+
+    toString(): string {
+        return this.value;
     }
 }
 
@@ -234,8 +292,16 @@ class EmptyString extends Regex {
         return new NFA(startState, acceptStates, table);
     }
 
+    simplify(): Regex {
+        return this;
+    }
+
     equals(other: Regex): boolean {
         return other instanceof EmptyString;
+    }
+
+    toString(): string {
+        return "~";
     }
 }
 
@@ -252,8 +318,16 @@ class EmptySet extends Regex {
         return new NFA(startState, acceptStates, table);
     }
 
+    simplify(): Regex {
+        return this;
+    }
+
     equals(other: Regex): boolean {
         return other instanceof EmptySet;
+    }
+
+    toString(): string {
+        return "∅";
     }
 }
 
