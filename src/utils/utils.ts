@@ -1,6 +1,6 @@
 import type { NFAJson } from "~/simulator/nfa";
 import type * as d3 from "d3";
-import { GNFAJson } from "~/simulator/gnfa";
+import type { GNFAJson } from "~/simulator/gnfa";
 
 export type GraphData = {
     nodes: d3.SimulationNodeDatum[];
@@ -72,7 +72,7 @@ function GNFAJsonToNodeToIndexMap(data: GNFAJson): Map<string, number> {
             nodeToIndex.set(src, index);
             index++;
         }
-        for (const [tgt, _] of Object.entries(transitions)) {
+        for (const tgt of Object.keys(transitions)) {
             if (!(nodeToIndex.has(tgt))) {
                 nodeToIndex.set(tgt, index);
                 index++;

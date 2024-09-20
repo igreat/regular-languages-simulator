@@ -1,5 +1,6 @@
-import { NFA } from "./nfa";
-import { Regex, Union, Concat, Star, EmptySet, EmptyString, Char, parseRegex } from "./regex";
+import type { NFA } from "./nfa";
+import { Union, Concat, Star, EmptySet, EmptyString, Char, parseRegex } from "./regex";
+import type { Regex } from "./regex";
 
 class GNFA {
     private startState: string;
@@ -155,10 +156,10 @@ class GNFA {
         const regexes: Record<string, Record<string, string>> = {};
         for (const src of this.states) {
             for (const tgt of this.states) {
-                if (!this.table[src] || !this.table[src][tgt]) continue;
+                if (!this.table?.[src]?.[tgt]) continue;
                 const regex = this.table[src][tgt];
                 if (!(regex instanceof EmptySet)) { // might change this later, for now I'm just not showing EmptySet
-                    regexes[src] = regexes[src] || {};
+                    regexes[src] = regexes[src] ?? {};
                     regexes[src][tgt] = regex.toString();
                 }
             }

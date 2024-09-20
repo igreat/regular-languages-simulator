@@ -1,7 +1,7 @@
 import type { NFAJson } from "~/simulator/nfa";
 import type { GraphData } from "./utils";
 import { GNFAJsonToGraphData, NFAJsonToGraphData } from "./utils";
-import { GNFAJson } from "~/simulator/gnfa";
+import type { GNFAJson } from "~/simulator/gnfa";
 
 describe("NFAJsonToGraphData", () => {
     let json: NFAJson;
@@ -71,7 +71,6 @@ describe("GNFAJsonToGraphData", () => {
         };
 
         data = GNFAJsonToGraphData(json);
-        console.log(data);
     });
 
     test("Correct number of nodes", () => {
