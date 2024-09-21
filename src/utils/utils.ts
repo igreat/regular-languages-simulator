@@ -84,7 +84,7 @@ function GNFAJsonToNodeToIndexMap(data: GNFAJson): Map<string, number> {
 
 
 export function GNFAJsonToGraphData(data: GNFAJson): GraphData {
-    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length + 1}, () => ({}));
+    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length + 1 }, () => ({}));
     const nodeToIndex = GNFAJsonToNodeToIndexMap(data);
     const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
     for (const [node, index] of nodeToIndex) {
@@ -110,7 +110,31 @@ export function GNFAJsonToGraphData(data: GNFAJson): GraphData {
     };
 }
 
-export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
+const SEPARATION_DEGREE = Math.PI / 5;
+function getSelfLoopPath(x: number, y: number): string {
+    if (x === 0 && y === 0) {
+        [x, y] = [1, 1];
+    }
+    const size = Math.sqrt(x * x + y * y);
+    const directionX = x !== 0 ? x / size : 1e-5;
+    const directionY = y / size;
+    const direction = -Math.abs(Math.atan(directionY / directionX));
+    console.log(x, y);
+    console.log(direction);
+    /*
+            |
+            |
+            |
+    ---------
+    tan(theta) = h / x
+    theta = arctan(h / x)
+    */
+    const [x1Rotated, y1Rotated] = rotatePoint(x + directionX * 22, y + directionY * 22, x, y, -SEPARATION_DEGREE);
+    const [x2Rotated, y2Rotated] = rotatePoint(x + directionX * 22, y + directionY * 22, x, y, SEPARATION_DEGREE);
+    return `M ${x1Rotated} ${y1Rotated} A ${18} ${18} ${0} ${1} ${1} ${x2Rotated} ${y2Rotated}`;
+}
+
+export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>): string {
     const src = d.source as d3.SimulationNodeDatum;
     const tgt = d.target as d3.SimulationNodeDatum;
 
@@ -120,10 +144,7 @@ export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
     const y2 = tgt.y ?? 0;
 
     if (src.index === tgt.index) {
-        const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
-        const [x1Rotated, y1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
-        const [x2Rotated, y2Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction + Math.PI / 3);
-        return `M ${x1Rotated} ${y1Rotated} A ${18} ${18} ${0} ${1} ${1} ${x2Rotated} ${y2Rotated}`;
+        return getSelfLoopPath(x1, y1);
     }
 
     const sourceRadius = 21;
