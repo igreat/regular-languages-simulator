@@ -93,8 +93,11 @@ class Concat extends Regex {
             && this.right.equals(other.right);
     }
 
-    toString(): string {
-        return `(${this.left.toString()}${this.right.toString()})`;
+    toString(isConcatSeq?: boolean): string {
+        const leftStr = this.left instanceof Concat ? this.left.toString(true) : this.left.toString(); 
+        const rightStr = this.right instanceof Concat ? this.right.toString(true) : this.right.toString(); 
+
+        return (isConcatSeq ? "" : "(") + leftStr + rightStr + (isConcatSeq ? "" : ")");
     }
 }
 
@@ -176,8 +179,11 @@ class Union extends Regex {
             && this.right.equals(other.right);
     }
 
-    toString(): string {
-        return `(${this.left.toString()}|${this.right.toString()})`;
+    toString(isUnionSeq?: boolean): string {
+        const leftStr = this.left instanceof Union ? this.left.toString(true) : this.left.toString(); 
+        const rightStr = this.right instanceof Union ? this.right.toString(true) : this.right.toString(); 
+
+        return (isUnionSeq ? "" : "(") + leftStr + "|" + rightStr + (isUnionSeq ? "" : ")");
     }
 }
 

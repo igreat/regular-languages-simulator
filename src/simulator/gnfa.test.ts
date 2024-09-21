@@ -1,5 +1,5 @@
 import { NFA } from "./nfa";
-import { Regex, Union, Concat, Star, EmptySet, EmptyString, Char } from "./regex";
+import { Regex, Union, Concat, Star, EmptySet, EmptyString, Char, parseRegex } from "./regex";
 import { GNFA } from "./gnfa";
 
 describe("NFA that accepts even number of 0s or even number of 1s converted to GNFA correctly", () => {
@@ -95,10 +95,16 @@ describe("NFA that checks if string has a 'b' correctly reduces after removing o
     test("Reduced GNFA after removing state '2' then '1' is correct", () => {
         const targetRegexes = {
             "ST": {
-                "AC": "(a*(b(a|b)*))",
+                "AC": "(a*b(a|b)*)",
             }
         }
         expect(reducedGnfa2.getRegexStrings()).toEqual(targetRegexes);
     });
 
 });
+
+test("Regex '(a|((b|c)|d))' prints as '(a|b|c|d)'", () => {
+    const regexStr = parseRegex("(a|((b|c)|d))").simplify().toString();
+    const targetStr = "(a|b|c|d)";
+    expect(regexStr).toEqual(targetStr);
+})

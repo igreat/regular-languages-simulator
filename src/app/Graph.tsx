@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useMemo } from "react";
 import * as d3 from "d3";
-import { curvePath, getBezierMidpoint, getSelfLoopMidpoint, rotatePoint } from "../utils/utils";
+import { curvePath, getBezierMidpoint, getSelfLoopMidpoint } from "../utils/utils";
 import type { GraphData } from "../utils/utils";
 
 export default function Graph({
