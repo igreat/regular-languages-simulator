@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useMemo } from "react";
 import * as d3 from "d3";
-import { curvePath, getBezierMidpoint, rotatePoint } from "../utils/utils";
+import { curvePath, getBezierMidpoint, getSelfLoopMidpoint, rotatePoint } from "../utils/utils";
 import type { GraphData } from "../utils/utils";
 
 export default function Graph({
@@ -208,11 +208,12 @@ function updateGraph(
       const y2 = tgt.y ?? 0;
 
       if (src.index === tgt.index) {
-        const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
-        const [x1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
-        const [x2Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction + Math.PI / 3);
+        // const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
+        // const [x1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
+        // const [x2Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction + Math.PI / 3);
 
-        return (x1Rotated + x2Rotated) / 2 - direction * 20;
+        // return (x1Rotated + x2Rotated) / 2 - direction * 20;
+        return getSelfLoopMidpoint(x1, y1)[0];
       }
 
       return getBezierMidpoint(x1, y1, x2, y2)[0];
@@ -227,10 +228,7 @@ function updateGraph(
       const y2 = tgt.y ?? 0;
 
       if (src.index === tgt.index) {
-        const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
-        const [, y1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
-        const [, y2Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction + Math.PI / 3);
-        return (y1Rotated + y2Rotated) / 2 + 30;
+        return getSelfLoopMidpoint(x1, y1)[1]; 
       }
 
       return getBezierMidpoint(x1, y1, x2, y2)[1];

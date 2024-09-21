@@ -118,9 +118,6 @@ function getSelfLoopPath(x: number, y: number): string {
     const size = Math.sqrt(x * x + y * y);
     const directionX = x !== 0 ? x / size : 1e-5;
     const directionY = y / size;
-    const direction = -Math.abs(Math.atan(directionY / directionX));
-    console.log(x, y);
-    console.log(direction);
     /*
             |
             |
@@ -242,4 +239,31 @@ export function getBezierMidpoint(
     const midX = (0.25 * x1Rotated) + (0.5 * cx) + (0.25 * x2Rotated);
     const midY = (0.25 * y1Rotated) + (0.5 * cy) + (0.25 * y2Rotated);
     return [midX, midY];
+}
+
+export function getSelfLoopMidpoint(x: number, y: number): [number, number] {
+    if (x === 0 && y === 0) {
+        [x, y] = [1, 1];
+    }
+    const size = Math.sqrt(x * x + y * y);
+    const directionX = x !== 0 ? x / size : 1e-5;
+    const directionY = y / size;
+    /*
+            |
+            |
+            |
+    ---------
+    tan(theta) = h / x
+    theta = arctan(h / x)
+    */
+    const [x1Rotated, y1Rotated] = rotatePoint(x + directionX * 22, y + directionY * 22, x, y, -SEPARATION_DEGREE);
+    const [x2Rotated, y2Rotated] = rotatePoint(x + directionX * 22, y + directionY * 22, x, y, SEPARATION_DEGREE);
+    const diffX = x2Rotated - x1Rotated;
+    const diffY = y2Rotated - y1Rotated;
+    const diffSize = Math.sqrt(diffX * diffX + diffY * diffY);
+    // computing the norm
+    const [normX, normY] = [diffY / diffSize, -diffX / diffSize];
+    const [midX, midY] = [(x1Rotated + x2Rotated) / 2, (y1Rotated + y2Rotated) / 2];
+    const SHIFT_FACTOR = 32;
+    return [midX + normX * SHIFT_FACTOR, midY + normY * SHIFT_FACTOR];
 }
