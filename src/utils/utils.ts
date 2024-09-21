@@ -129,32 +129,28 @@ export function curvePath(d: d3.SimulationLinkDatum<d3.SimulationNodeDatum>) {
     const sourceRadius = 21;
     const targetRadius = 25;
 
-    const orientation = getOrientation(x1, y1, x2, y2);
     const [x1Outer, y1Outer, x2Outer, y2Outer] = getOuterPoints(x1, y1, x2, y2, sourceRadius, targetRadius);
-    const [x1Rotated, y1Rotated] = rotatePoint(x1Outer, y1Outer, x1, y1, orientation * Math.PI / 5);
-    const [x2Rotated, y2Rotated] = rotatePoint(x2Outer, y2Outer, x2, y2, -orientation * Math.PI / 5);
+    const [x1Rotated, y1Rotated] = rotatePoint(x1Outer, y1Outer, x1, y1, Math.PI / 5);
+    const [x2Rotated, y2Rotated] = rotatePoint(x2Outer, y2Outer, x2, y2, -Math.PI / 5);
     const [controlX, controlY] = getControlPoint(x1Rotated, y1Rotated, x2Rotated, y2Rotated);
 
     return `M ${x1Rotated} ${y1Rotated} Q ${controlX} ${controlY} ${x2Rotated} ${y2Rotated}`;
 }
 
-export function getOrientation(x1: number, y1: number, x2: number, y2: number) {
-    if (x1 < x2 && y1 < y2) return 1;
-    if (x1 < x2 && y1 >= y2) return -1;
-    if (x1 >= x2 && y1 < y2) return -1;
-    return 1;
-}
-
+const CURVE_FACTOR = 1.2;
 export function getCurveDirection(
     x1: number,
     y1: number,
     x2: number,
     y2: number,
 ): [number, number] {
-    if (x1 < x2 && y1 < y2) return [-1, 1];
-    if (x1 < x2 && y1 >= y2) return [-1, -1];
-    if (x1 >= x2 && y1 < y2) return [1, 1];
-    return [1, -1];
+    // should simply be the normal of the two points
+    const diffx = x2 - x1;
+    const diffy = y2 - y1;
+    // then rotate 90 degrees backward, aka (x, y) -> (-y, x)
+    // and normalize
+    const size = Math.sqrt(diffx * diffx + diffy * diffy);
+    return [-diffy / size * CURVE_FACTOR, diffx / size * CURVE_FACTOR];
 }
 
 export function rotatePoint(
@@ -218,10 +214,9 @@ export function getBezierMidpoint(
     x1: number, y1: number,
     x2: number, y2: number
 ): [number, number] {
-    const orientation = getOrientation(x1, y1, x2, y2);
     const [x1Outer, y1Outer, x2Outer, y2Outer] = getOuterPoints(x1, y1, x2, y2, 21, 25);
-    const [x1Rotated, y1Rotated] = rotatePoint(x1Outer, y1Outer, x1, y1, orientation * Math.PI / 5);
-    const [x2Rotated, y2Rotated] = rotatePoint(x2Outer, y2Outer, x2, y2, -orientation * Math.PI / 5);
+    const [x1Rotated, y1Rotated] = rotatePoint(x1Outer, y1Outer, x1, y1, Math.PI / 5);
+    const [x2Rotated, y2Rotated] = rotatePoint(x2Outer, y2Outer, x2, y2, -Math.PI / 5);
     const [cx, cy] = getControlPoint(x1Rotated, y1Rotated, x2Rotated, y2Rotated);
     const midX = (0.25 * x1Rotated) + (0.5 * cx) + (0.25 * x2Rotated);
     const midY = (0.25 * y1Rotated) + (0.5 * cy) + (0.25 * y2Rotated);
