@@ -8,9 +8,11 @@ import type { GraphData } from "../utils/utils";
 export default function Graph({
   data,
   activeNodes,
+  isRemovingState,
 }: {
   data: GraphData;
   activeNodes: Set<string>;
+  isRemovingState: boolean;
 }) {
   const ref = useRef<SVGSVGElement | null>(null);
 

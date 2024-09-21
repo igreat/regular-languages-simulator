@@ -84,7 +84,7 @@ function GNFAJsonToNodeToIndexMap(data: GNFAJson): Map<string, number> {
 
 
 export function GNFAJsonToGraphData(data: GNFAJson): GraphData {
-    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
+    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length + 1}, () => ({}));
     const nodeToIndex = GNFAJsonToNodeToIndexMap(data);
     const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
     for (const [node, index] of nodeToIndex) {

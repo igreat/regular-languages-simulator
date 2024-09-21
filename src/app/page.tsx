@@ -8,8 +8,9 @@ import { useEffect, useState } from "react";
 import Graph from "./Graph";
 import InputTable from "./InputTable";
 import { NFA } from '~/simulator/nfa';
-import { NFAJsonToGraphData } from "../utils/utils";
+import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../utils/utils";
 import exampleNFAJson from "../../data/even_0s_or_1s_nfa.json";
+import { GNFA } from '~/simulator/gnfa';
 
 export default function HomePage() {
   const [currentStates, setCurrentStates] = useState<string[]>([]);
@@ -26,6 +27,12 @@ export default function HomePage() {
   const [data, setData] = useState<GraphData>(
     NFAJsonToGraphData(exampleNFAJson as NFAJson)
   );
+
+  const [isReducingToRegex, setIsReducingToRegex] = useState<boolean>(false);
+  const [isGNFA, setIsGNFA] = useState<boolean>(false);
+  const [isRemovingState, setIsRemovingState] = useState<boolean>(false);
+  const [gnfa, setGnfa] = useState<GNFA | null>(null);
+  const [stateToRemove, setStateToRemove] = useState<string>(""); // TODO: will remove this later
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -52,8 +59,8 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
           {/* NFA and Buttons Section*/}
           <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
-            {/* Buttons Above */}
-            <div className="flex flex-row justify-center gap-4 w-full">
+            {/* Buttons: Convert to DFA, Minimize, Relabel and Copy to Table */}
+            <div className="flex flex-row justify-between gap-4 w-full">
               <button
                 onClick={() => {
                   if (!nfa)
@@ -64,6 +71,10 @@ export default function HomePage() {
                   setCurrentStates([]);
                   setInputPos(0);
                   setSimulation(null);
+                  setIsGNFA(false);
+                  setIsRemovingState(false);
+                  setIsReducingToRegex(false);
+                  setGnfa(null);
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -86,6 +97,10 @@ export default function HomePage() {
                   setCurrentStates([]);
                   setInputPos(0);
                   setSimulation(null);
+                  setIsGNFA(false);
+                  setIsRemovingState(false);
+                  setIsReducingToRegex(false);
+                  setGnfa(null); 
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -104,6 +119,10 @@ export default function HomePage() {
                   setCurrentStates([]);
                   setInputPos(0);
                   setSimulation(null);
+                  setIsGNFA(false);
+                  setIsRemovingState(false);
+                  setIsReducingToRegex(false);
+                  setGnfa(null);
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -120,8 +139,62 @@ export default function HomePage() {
                 Copy to Table
               </button>
             </div>
+            {/* Buttons: Simplify to Regex, Convert to GNFA */}
+            <div className="flex flex-row justify-left gap-4 w-full">
+              <button
+                onClick={() => {
+                  setIsReducingToRegex(true);
+                }}
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+              >
+                Simplify to Regex
+              </button>
+              {isReducingToRegex && <button
+                onClick={() => {
+                  setIsGNFA(true);
+                  if (!nfa) return;
+                  console.log(GNFAJsonToGraphData(GNFA.fromNFA(nfa).toJSON()))
+                  const newGnfa = GNFA.fromNFA(nfa);
+                  setGnfa(newGnfa);
+                  setData(GNFAJsonToGraphData(newGnfa.toJSON()));
+                }}
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+              >
+                Convert to GNFA
+              </button>}
+              {isGNFA && (
+                <div className="flex flex-col items-center justify-center w-full h-full">
+                  {/* Toggle remove state */}
+                  <button
+                    className={`${isRemovingState ? "bg-blue-500" : "bg-red-500"} text-white text-sm font-bold py-2 px-4 rounded`}
+                    onClick={() => setIsRemovingState(prev => !prev)}
+                  >
+                    {isRemovingState ? "Stop Removing States" : "Start Removing States"}
+                  </button>
+                  {/* TEMPORARY TEXT INPUT, FINAL VERSION SHOULD BE POINT AND CLICK */}
+                  <textarea
+                    className="p-2 text-blue-300 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm resize-none"
+                    value={stateToRemove}
+                    onChange={(e) => {
+                      setStateToRemove(e.target.value);
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (!gnfa) return;
+                      const newGnfa = gnfa.reduced(stateToRemove);
+                      setGnfa(newGnfa);
+                      setData(GNFAJsonToGraphData(newGnfa.toJSON()));
+                    }}
+                    className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                  >
+                    Remove State
+                  </button>
+                </div>
+              )}
+            </div>
             {/* Simulation Part */}
-            <Graph data={data} activeNodes={new Set(currentStates)} />
+            <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} />
             <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
               <input
                 type="text"
@@ -162,6 +235,7 @@ export default function HomePage() {
                 Load NFA
               </button>
             </div>
+
           </div>
 
           {/* Input Table Section */}

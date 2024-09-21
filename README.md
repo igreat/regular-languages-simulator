@@ -19,7 +19,7 @@
 - [x] Add ability to minimally and consistently relabel DFA (equivalent DFAs get the same relabeling)
 - [x] Add ability to check equivalence of two NFAs
 - [x] Add ability to convert regex into NFA
-- [ ] Add ability to convert NFA into regex
+- [x] Add ability to convert NFA into regex
 - [ ] Saving and loading DFA/NFA from database (Vercel Postgres)
 - [ ] Authentication
 - [ ] Add ability to stop forces and fix DFA/NFA

@@ -74,7 +74,7 @@ describe("GNFAJsonToGraphData", () => {
     });
 
     test("Correct number of nodes", () => {
-        expect(data.nodes.length).toBe(6);
+        expect(data.nodes.length).toBe(7);
     });
 
     test("Correct node labels", () => {
