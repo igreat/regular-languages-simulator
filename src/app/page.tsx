@@ -41,7 +41,6 @@ export default function HomePage() {
     const interval = setInterval(() => {
       if (inputPos > input.length) return;
       const nextStates = simulation?.next().value;
-      console.log(nextStates);
       if (typeof nextStates === "boolean")
         return;
       setCurrentStates(nextStates ?? []);

@@ -56,23 +56,26 @@ class DFA {
         const states = this.getReachableStates();
         const rejectStates = states;
         this.acceptStates.forEach((s) => rejectStates.delete(s));
-        const belongsTo = new Map<string, number>();
-
+        let currBelongsTo = new Map<string, number>();
+        
         let currEquivs: string[][] = [];
         if (rejectStates.size > 0) {
-            rejectStates.forEach((s) => belongsTo.set(s, currEquivs.length));
+            rejectStates.forEach((s) => currBelongsTo.set(s, currEquivs.length));
             currEquivs.push(Array.from(rejectStates));
         }
         if (this.acceptStates.size > 0) {
-            this.acceptStates.forEach((s) => belongsTo.set(s, currEquivs.length));
+            this.acceptStates.forEach((s) => currBelongsTo.set(s, currEquivs.length));
             currEquivs.push(Array.from(this.acceptStates));
         }
         
         let prevEquivs: string[][] = [];
+        let prevBelongsTo = new Map<string, number>();
 
         do {
             prevEquivs = currEquivs;
             currEquivs = [];
+            prevBelongsTo = currBelongsTo;
+            currBelongsTo = new Map<string, number>();
             for (const equiv of prevEquivs) {
                 const joined = Array(equiv.length).fill(false);
                 for (let i = 0; i < equiv.length; i++) {
@@ -86,15 +89,15 @@ class DFA {
                             const stateI = this.table[idI]?.[symbol];
                             const stateJ = this.table[idJ]?.[symbol];
                             if (!stateI || !stateJ) return false;
-                            return belongsTo.get(stateI) == belongsTo.get(stateJ);
+                            return prevBelongsTo.get(stateI) == prevBelongsTo.get(stateJ);
                         })) {
-                            belongsTo.set(equiv[j]!, currEquivs.length);
+                            currBelongsTo.set(equiv[j]!, currEquivs.length);
                             newEquiv.push(equiv[j]!);
                             joined[j] = true;
                         }
                     }
                     joined[i] = true;
-                    belongsTo.set(equiv[i]!, currEquivs.length);
+                    currBelongsTo.set(equiv[i]!, currEquivs.length);
                     currEquivs.push(newEquiv);
                 }
             }
@@ -113,7 +116,7 @@ class DFA {
             for (const symbol of symbols) {
                 const target = this.table[state]?.[symbol];
                 if (!target) continue;
-                const tgtId = belongsTo.get(target)!;
+                const tgtId = currBelongsTo.get(target)!;
                 const tgtList = currEquivs[tgtId]!.sort();
                 const tgtKey = tgtList.join("-");
                 if (tgtKey !== undefined) {
@@ -210,6 +213,39 @@ class DFA {
         } while (newStates.size != 0);
 
         return reachableStates;
+    }
+
+    // states that have a path to an accept state, to be used later if we choose to eliminate trap states
+    getAcceptableStates(): Set<string> {
+        const acceptableStates = new Set<string>();
+        const queue = new Queue<string>(Array.from(this.acceptStates));
+        const visited = new Set<string>();
+        while (!queue.isEmpty()) {
+            const state = queue.pop();
+            if (visited.has(state))
+                continue;
+            visited.add(state);
+            acceptableStates.add(state);
+
+            for (const next of this.getStatesLeadingTo(state)) {
+                queue.push(next);
+            }
+        }
+
+        return acceptableStates;
+    }
+
+    // TODO: this could be greatly optimized by one-time calculation of reverse graph
+    getStatesLeadingTo(state: string): string[] {
+        const states = new Set<string>();
+        for (const [src, transitions] of Object.entries(this.table)) {
+            for (const target of Object.values(transitions)) {
+                if (target === state) {
+                    states.add(src);
+                }
+            }
+        }
+        return Array.from(states);
     }
 
     getStartState(): string {

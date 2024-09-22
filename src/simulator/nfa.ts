@@ -75,6 +75,22 @@ class NFA {
     }
 
     toDFA(): DFA {
+        const trashState = "∅";
+        const states = [...this.states, trashState];
+
+        const nfaTable = this.getTable();
+        // add trash state to the table
+        for (const state of states) {
+            if (!nfaTable[state]) {
+                nfaTable[state] = {};
+            }
+            for (const symbol of this.symbols) {
+                if (!nfaTable[state][symbol]) {
+                    nfaTable[state][symbol] = [trashState];
+                }
+            }
+        }
+
         const table: DFATransitionTable = {};
         const acceptStates = new Set<string>();
         const startState = Array.from(this.epsilonClosure(this.startState)).sort().join(",");
@@ -93,10 +109,10 @@ class NFA {
             visited.add(srcKey);
             const transitions: Record<string, Set<string>> = {};
             for (const state of srcStates) {
-                if (!this.table[state])
+                if (!nfaTable[state])
                     continue;
                 for (const symbol of this.symbols) {
-                    const targets = this.table[state][symbol] ?? [];
+                    const targets = nfaTable[state][symbol] ?? [];
                     if (!transitions[symbol])
                         transitions[symbol] = new Set<string>();
                     for (const closure of targets.flatMap((t) => this.epsilonClosure(t))) {

@@ -33,15 +33,9 @@ function NFAJsonToNodeToIndexMap(data: NFAJson): Map<string, number> {
 }
 
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
-    const states = new Set(Object.keys(data.table));
-
-    // in case the start state or accept states are not in the table
-    data.acceptStates.forEach((state) => { states.add(state); });
-    states.add(data.startState);
-
-    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: states.size }, () => ({}));
     const nodeToIndex = NFAJsonToNodeToIndexMap(data);
-    const nodeLabels: string[] = Array.from({ length: states.size }, () => (""));
+    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: nodeToIndex.size }, () => ({}));
+    const nodeLabels: string[] = Array.from({ length: nodeToIndex.size }, () => (""));
     for (const [node, index] of nodeToIndex) {
         nodeLabels[index] = node.toString()
     }
@@ -100,8 +94,8 @@ function GNFAJsonToNodeToIndexMap(data: GNFAJson): Map<string, number> {
 
 
 export function GNFAJsonToGraphData(data: GNFAJson, initialPositions?: Record<string, [number, number]>): GraphData {
-    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length + 1 }, () => ({}));
     const nodeToIndex = GNFAJsonToNodeToIndexMap(data);
+    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: nodeToIndex.size }, () => ({}));
     if (initialPositions) {
         for (const [node, index] of nodeToIndex) {
             if (initialPositions[node]) {
@@ -110,7 +104,7 @@ export function GNFAJsonToGraphData(data: GNFAJson, initialPositions?: Record<st
         }
     }
 
-    const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
+    const nodeLabels: string[] = Array.from({ length: nodeToIndex.size }, () => (""));
     for (const [node, index] of nodeToIndex) {
         nodeLabels[index] = node.toString()
     }
