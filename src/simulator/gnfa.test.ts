@@ -1,5 +1,5 @@
 import { NFA } from "./nfa";
-import { Regex, Union, Concat, Star, EmptySet, EmptyString, Char, parseRegex } from "./regex";
+import { Union, EmptySet, EmptyString, Char, parseRegex } from "./regex";
 import { GNFA } from "./gnfa";
 
 describe("NFA that accepts even number of 0s or even number of 1s converted to GNFA correctly", () => {

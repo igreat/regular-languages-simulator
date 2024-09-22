@@ -53,7 +53,7 @@ export default function Graph({
       updateGraph(node, link, nodeLabel, linkLabel),
     );
 
-  }, [data, indexToNode]);
+  }, [data, indexToNode, isRemovingState, handleDeleteState]);
 
   useEffect(() => {
     if (ref.current) {
@@ -185,6 +185,8 @@ function renderLabels(
     .append("g")
     .attr("text-anchor", "middle")
     .attr("font-size", 12)
+    .attr("font-weight", "bold")
+    .attr("font-family", "JetBrains Mono, monospace")
     .attr("fill", "white")
     .selectAll("text")
     .data(nodes)
@@ -196,6 +198,7 @@ function renderLabels(
     .attr("text-anchor", "middle")
     .attr("font-size", 12)
     .attr("font-weight", "bold")
+    .attr("font-family", "JetBrains Mono, monospace")
     .attr("fill", "#fff")
     .selectAll("text")
     .data(links)

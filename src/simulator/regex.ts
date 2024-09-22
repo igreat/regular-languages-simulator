@@ -2,7 +2,6 @@ import { NFA } from "./nfa";
 import type { NFATransitionTable } from "./nfa";
 
 abstract class Regex {
-    abstract match(input: string): boolean; // not necessary for now
     abstract toNFA(): NFA;
     abstract simplify(): Regex;
     abstract equals(other: Regex): boolean;
@@ -12,10 +11,6 @@ abstract class Regex {
 class Concat extends Regex {
     constructor(public left: Regex, public right: Regex) {
         super();
-    }
-
-    match(input: string): boolean {
-        return true;
     }
 
     toNFA(): NFA {
@@ -106,10 +101,6 @@ class Union extends Regex {
         super();
     }
 
-    match(input: string): boolean {
-        return true;
-    }
-
     toNFA(): NFA {
         const left_nfa = this.left.toNFA();
         const right_nfa = this.right.toNFA();
@@ -196,10 +187,6 @@ class Star extends Regex {
         super();
     }
 
-    match(input: string): boolean {
-        return true;
-    }
-
     toNFA(): NFA {
         const startState = "0";
         // all states now are +1 to offset new start state
@@ -263,10 +250,6 @@ class Char extends Regex {
         super();
     }
 
-    match(input: string): boolean {
-        return true;
-    }
-
     toNFA(): NFA {
         const startState = "0";
         const acceptStates = ["1"];
@@ -292,10 +275,6 @@ class Char extends Regex {
 }
 
 class EmptyString extends Regex {
-    match(input: string): boolean {
-        return input.length === 0;
-    }
-
     toNFA(): NFA {
         const startState = "0";
         const acceptStates = ["0"];
@@ -318,10 +297,6 @@ class EmptyString extends Regex {
 }
 
 class EmptySet extends Regex {
-    match(_input: string): boolean {
-        return false; // Empty never matches anything
-    }
-
     toNFA(): NFA {
         const startState = "0";
         const acceptStates: string[] = [];
