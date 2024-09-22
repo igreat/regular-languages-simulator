@@ -1,4 +1,6 @@
-# DFA Simulator
+# Regular Languages Simulator
+
+A web app for simulating regular languages, including deterministic finite automata (DFA), non-deterministic finite automata (NFA), and regular expressions. It can step by step convert between these representations and check equivalence between NFAs (NFA equivalence still doesn't have a UI 😜).
 
 ## TODO
 
