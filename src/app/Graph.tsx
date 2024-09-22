@@ -9,11 +9,18 @@ export default function Graph({
   data,
   activeNodes,
   isRemovingState,
+  handleDeleteState,
 }: {
   data: GraphData;
   activeNodes: Set<string>;
   isRemovingState: boolean;
+  handleDeleteState: (node: string) => void;
 }) {
+  const indexToNode = useMemo(() => {
+    const map = new Map<number, string>();
+    data.nodeToIndex?.forEach((value, key) => map.set(value, key));
+    return map;
+  }, [data.nodeToIndex]);
   const ref = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
@@ -33,7 +40,7 @@ export default function Graph({
     setupMarkers(svg);
     const simulation = setupSimulation(data);
     const link = renderLinks(svg, data.links);
-    const node = renderNodes(svg, data.nodes, simulation);
+    const node = renderNodes(svg, data.nodes, simulation, isRemovingState, handleDeleteState, indexToNode);
     const { nodeLabel, linkLabel } = renderLabels(
       svg,
       data.nodes,
@@ -45,13 +52,8 @@ export default function Graph({
     simulation.on("tick", () =>
       updateGraph(node, link, nodeLabel, linkLabel),
     );
-  }, [data]);
 
-  const indexToNode = useMemo(() => {
-    const map = new Map<number, string>();
-    data.nodeToIndex?.forEach((value, key) => map.set(value, key));
-    return map;
-  }, [data.nodeToIndex]);
+  }, [data, indexToNode]);
 
   useEffect(() => {
     if (ref.current) {
@@ -66,10 +68,18 @@ export default function Graph({
           return (indexToNode.get(i) ?? "") == data.startState ? "#7f7f7f" : "#000";
         })
         .attr("stroke-width", (_, i) => (data.acceptStates.has(indexToNode.get(i) ?? "") ? 3 : 2))
-        .attr("stroke", (_, i) => (data.acceptStates.has(indexToNode.get(i) ?? "") ? "lightgreen" : "#fff"));
+        .attr("stroke", (_, i) => (data.acceptStates.has(indexToNode.get(i) ?? "") ? "lightgreen" : "#fff"))
+        // make dotted line for isRemovingState, except for startState and acceptStates
+        .attr("stroke-dasharray", (_, i) => {
+          if (isRemovingState && !data.acceptStates.has(indexToNode.get(i) ?? "") && indexToNode.get(i) !== data.startState) {
+            return "5,5";
+          }
+          return "";
+        });
+
 
     }
-  }, [activeNodes, data.acceptStates, data.startState, indexToNode]);
+  }, [activeNodes, data.acceptStates, data.startState, indexToNode, isRemovingState]);
 
   return <svg ref={ref}></svg>;
 }
@@ -123,6 +133,9 @@ function renderNodes(
   svg: SVGSelection,
   nodes: d3.SimulationNodeDatum[],
   simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>,
+  isRemovingState: boolean,
+  handleDeleteState: (node: string) => void,
+  indexToNode: Map<number, string>,
 ): NodeSelection {
   const node = svg
     .append("g")
@@ -132,7 +145,13 @@ function renderNodes(
     .data(nodes)
     .join("circle")
     .attr("r", 20)
-    .style("fill", "#000") as NodeSelection;
+    .style("fill", "#000")
+    .on("click", (event: MouseEvent, d) => {
+      if (isRemovingState) {
+        event.stopPropagation();
+        handleDeleteState(indexToNode.get(d.index!) ?? "");
+      }
+    }) as NodeSelection;
 
   type DragEvent = d3.D3DragEvent<
     SVGCircleElement,
@@ -208,11 +227,6 @@ function updateGraph(
       const y2 = tgt.y ?? 0;
 
       if (src.index === tgt.index) {
-        // const direction = ((x1 > 0 ? -1 : 1) * Math.PI) / 4;
-        // const [x1Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction);
-        // const [x2Rotated] = rotatePoint(x1 + 16, y1 + 16, x1, y1, direction + Math.PI / 3);
-
-        // return (x1Rotated + x2Rotated) / 2 - direction * 20;
         return getSelfLoopMidpoint(x1, y1)[0];
       }
 
@@ -228,7 +242,7 @@ function updateGraph(
       const y2 = tgt.y ?? 0;
 
       if (src.index === tgt.index) {
-        return getSelfLoopMidpoint(x1, y1)[1]; 
+        return getSelfLoopMidpoint(x1, y1)[1];
       }
 
       return getBezierMidpoint(x1, y1, x2, y2)[1];

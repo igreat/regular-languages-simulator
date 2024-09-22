@@ -32,7 +32,6 @@ export default function HomePage() {
   const [isGNFA, setIsGNFA] = useState<boolean>(false);
   const [isRemovingState, setIsRemovingState] = useState<boolean>(false);
   const [gnfa, setGnfa] = useState<GNFA | null>(null);
-  const [stateToRemove, setStateToRemove] = useState<string>(""); // TODO: will remove this later
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -52,6 +51,14 @@ export default function HomePage() {
   const handleNFAChange = (nfaJson: string) => {
     setNFAJson(nfaJson);
   };
+
+  const handleDeleteState = (node: string) => {
+    if (gnfa) {
+      const newGnfa = gnfa.reduced(node);
+      setGnfa(newGnfa);
+      setData(GNFAJsonToGraphData(newGnfa.toJSON()));
+    }
+  }
 
   return (
     <>
@@ -171,30 +178,11 @@ export default function HomePage() {
                   >
                     {isRemovingState ? "Stop Removing States" : "Start Removing States"}
                   </button>
-                  {/* TEMPORARY TEXT INPUT, FINAL VERSION SHOULD BE POINT AND CLICK */}
-                  <textarea
-                    className="p-2 text-blue-300 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm resize-none"
-                    value={stateToRemove}
-                    onChange={(e) => {
-                      setStateToRemove(e.target.value);
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      if (!gnfa) return;
-                      const newGnfa = gnfa.reduced(stateToRemove);
-                      setGnfa(newGnfa);
-                      setData(GNFAJsonToGraphData(newGnfa.toJSON()));
-                    }}
-                    className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
-                  >
-                    Remove State
-                  </button>
                 </div>
               )}
             </div>
             {/* Simulation Part */}
-            <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} />
+            <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState}/>
             <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
               <input
                 type="text"

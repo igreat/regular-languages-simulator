@@ -162,12 +162,16 @@ class Union extends Regex {
     simplify(): Regex {
         const left = this.left.simplify();
         const right = this.right.simplify();
-        if (left instanceof EmptyString || right instanceof EmptyString) {
-            return new EmptyString();
-        } else if (left instanceof EmptySet) {
+        if (left instanceof EmptySet) {
             return right;
         } else if (right instanceof EmptySet) {
             return left;
+        } else if (left.equals(right)) {
+            return left;
+        } else if (left instanceof Star && left.inner.equals(right)) {
+            return left;
+        } else if (right instanceof Star && right.inner.equals(left)) {
+            return right;
         } else {
             return new Union(left, right);
         }
@@ -237,6 +241,8 @@ class Star extends Regex {
         const inner = this.inner.simplify();
         if (inner instanceof EmptyString || inner instanceof EmptySet) {
             return new EmptyString();
+        } else if (inner instanceof Star) {
+            return inner;
         } else {
             return new Star(inner);
         }
