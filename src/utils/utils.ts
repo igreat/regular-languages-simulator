@@ -99,9 +99,17 @@ function GNFAJsonToNodeToIndexMap(data: GNFAJson): Map<string, number> {
 }
 
 
-export function GNFAJsonToGraphData(data: GNFAJson): GraphData {
+export function GNFAJsonToGraphData(data: GNFAJson, initialPositions?: Record<string, [number, number]>): GraphData {
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length + 1 }, () => ({}));
     const nodeToIndex = GNFAJsonToNodeToIndexMap(data);
+    if (initialPositions) {
+        for (const [node, index] of nodeToIndex) {
+            if (initialPositions[node]) {
+                nodes[index] = { x: initialPositions[node][0], y: initialPositions[node][1] };
+            }
+        }
+    }
+
     const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
     for (const [node, index] of nodeToIndex) {
         nodeLabels[index] = node.toString()

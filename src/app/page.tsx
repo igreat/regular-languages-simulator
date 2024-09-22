@@ -35,6 +35,7 @@ export default function HomePage() {
   const [isGNFA, setIsGNFA] = useState<boolean>(false);
   const [isRemovingState, setIsRemovingState] = useState<boolean>(false);
   const [gnfa, setGnfa] = useState<GNFA | null>(null);
+  const [finalRegex, setFinalRegex] = useState<string>("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -59,7 +60,35 @@ export default function HomePage() {
     if (gnfa) {
       const newGnfa = gnfa.reduced(node);
       setGnfa(newGnfa);
-      setData(GNFAJsonToGraphData(newGnfa.toJSON()));
+      const initialPositions: Record<string, [number, number]> = {};
+      const nodeToIndex = data.nodeToIndex;
+      const indexToNode = new Map<number, string>();
+      for (const [key, value] of nodeToIndex) {
+        indexToNode.set(value, key);
+      }
+
+      for (let i = 0; i < data.nodes.length; i++) {
+        const nodeKey = indexToNode.get(i);
+        const node = data.nodes[i];
+        if (nodeKey && node) {
+          initialPositions[nodeKey] = [node.x!, node.y!];
+        }
+      }
+
+      setData(GNFAJsonToGraphData(newGnfa.toJSON(), initialPositions));
+      if (newGnfa.isFinal()) {
+        const regexStrings = newGnfa.getRegexStrings();
+        const startState = newGnfa.getStartState();
+        const acceptState = newGnfa.getAcceptState();
+
+        if (regexStrings[startState]?.[acceptState] !== undefined) {
+          setFinalRegex(regexStrings[startState][acceptState]);
+        } else {
+          setFinalRegex("");
+        }
+      } else {
+        setFinalRegex("");
+      }
     }
   }
 
@@ -86,7 +115,6 @@ export default function HomePage() {
                       return;
                     }
                     const parsed = parseRegex(regexInput) ?? new EmptySet();
-                    console.log(parsed);
                     const nfa = parsed.toNFA();
                     setNFA(nfa);
                     setData(NFAJsonToGraphData(nfa.toJSON()));
@@ -98,6 +126,7 @@ export default function HomePage() {
                     setIsReducingToRegex(false);
                     setGnfa(null);
                     setRegexInputError("");
+                    setFinalRegex("");
                   } catch (e) {
                     setRegexInputError((e as Error).message);
                   }
@@ -125,6 +154,7 @@ export default function HomePage() {
                   setIsRemovingState(false);
                   setIsReducingToRegex(false);
                   setGnfa(null);
+                  setFinalRegex("");
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -151,6 +181,7 @@ export default function HomePage() {
                   setIsRemovingState(false);
                   setIsReducingToRegex(false);
                   setGnfa(null);
+                  setFinalRegex("");
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -173,6 +204,7 @@ export default function HomePage() {
                   setIsRemovingState(false);
                   setIsReducingToRegex(false);
                   setGnfa(null);
+                  setFinalRegex("");
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -203,10 +235,26 @@ export default function HomePage() {
                 onClick={() => {
                   setIsGNFA(true);
                   if (!nfa) return;
-                  console.log(GNFAJsonToGraphData(GNFA.fromNFA(nfa).toJSON()))
                   const newGnfa = GNFA.fromNFA(nfa);
                   setGnfa(newGnfa);
                   setData(GNFAJsonToGraphData(newGnfa.toJSON()));
+                  setCurrentStates([]);
+                  setInputPos(0);
+                  setSimulation(null);
+                  if (newGnfa.isFinal()) {
+                    const regexStrings = newGnfa.getRegexStrings();
+                    const startState = newGnfa.getStartState();
+                    const acceptState = newGnfa.getAcceptState();
+                  
+                    if (regexStrings[startState]?.[acceptState] !== undefined) {
+                      setFinalRegex(regexStrings[startState][acceptState]);
+                    } else {
+                      setFinalRegex("");
+                    }
+                  } else {
+                    setFinalRegex("");
+                  }
+                  
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -226,6 +274,7 @@ export default function HomePage() {
             </div>
             {/* Simulation Part */}
             <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
+            {finalRegex && <p className="text-green-500 text-sm font-bold">Final Regex: {finalRegex}</p>}
             <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
               <input
                 type="text"
@@ -291,6 +340,11 @@ export default function HomePage() {
                   setCurrentStates([]);
                   setInputPos(0);
                   setSimulation(null);
+                  setIsGNFA(false);
+                  setIsRemovingState(false);
+                  setIsReducingToRegex(false);
+                  setGnfa(null);
+                  setFinalRegex("");
                 } catch (error) {
                   console.error("Invalid JSON:", error);
                   // Optionally, add user feedback for invalid JSON

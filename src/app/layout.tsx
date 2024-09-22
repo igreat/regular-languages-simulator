@@ -67,7 +67,7 @@ function Footer() {
         <p>
           What they all have in common is that they all describe <span> </span>
           <a href="https://en.wikipedia.org/wiki/Regular_language" className="underline">Regular Languages</a>,
-          which is why we can convert to and from each other
+          which is why we can convert them to and from each other
         </p>
       </div>
     </footer>

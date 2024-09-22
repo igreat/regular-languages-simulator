@@ -129,6 +129,10 @@ class GNFA {
         return new GNFA(startState, acceptState, table);
     }
 
+    isFinal(): boolean {
+        return this.states.size === 2;
+    }
+
     getStates(): string[] {
         return [...this.states];
     }
