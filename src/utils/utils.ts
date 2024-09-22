@@ -15,17 +15,33 @@ export type GraphData = {
 function NFAJsonToNodeToIndexMap(data: NFAJson): Map<string, number> {
     let index = 0;
     const nodeToIndex = new Map<string, number>();
-    for (const node of Object.keys(data.table)) {
-        nodeToIndex.set(node, index);
-        index++;
+    for (const [src, transitions] of Object.entries(data.table)) {
+        if (!nodeToIndex.has(src)) {
+            nodeToIndex.set(src, index);
+            index++;
+        }
+        for (const targets of Object.values(transitions)) {
+            targets.forEach((tgt) => {
+                if (!(nodeToIndex.has(tgt))) {
+                    nodeToIndex.set(tgt, index);
+                    index++;
+                }
+            });
+        }
     }
     return nodeToIndex;
 }
 
 export function NFAJsonToGraphData(data: NFAJson): GraphData {
-    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: Object.keys(data.table).length }, () => ({}));
+    const states = new Set(Object.keys(data.table));
+
+    // in case the start state or accept states are not in the table
+    data.acceptStates.forEach((state) => { states.add(state); });
+    states.add(data.startState);
+
+    const nodes: d3.SimulationNodeDatum[] = Array.from({ length: states.size }, () => ({}));
     const nodeToIndex = NFAJsonToNodeToIndexMap(data);
-    const nodeLabels: string[] = Array.from({ length: Object.keys(data.table).length }, () => (""));
+    const nodeLabels: string[] = Array.from({ length: states.size }, () => (""));
     for (const [node, index] of nodeToIndex) {
         nodeLabels[index] = node.toString()
     }
@@ -53,7 +69,7 @@ export function NFAJsonToGraphData(data: NFAJson): GraphData {
     for (const [source, targets] of srcToTarget) {
         for (const [target, symbols] of targets) {
             links.push({ source: source, target: target });
-            linkLabels.push(symbols.join(" | "));
+            linkLabels.push(symbols.join("|"));
         }
     }
 

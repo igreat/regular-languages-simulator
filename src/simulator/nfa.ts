@@ -13,7 +13,7 @@ class NFA {
         this.startState = startState;
         this.acceptStates = new Set(acceptStates);
         this.table = table;
-        const states = new Set<string>();
+        const states = new Set<string>([startState, ...acceptStates]);
 
         const symbolSet = new Set<string>();
         for (const [state, transitions] of Object.entries(this.table)) {
@@ -23,6 +23,7 @@ class NFA {
                 targets.forEach((target) => { states.add(target) });
             }
         }
+
         this.states = Array.from(states).sort();
         symbolSet.delete("~");
         this.symbols = Array.from(symbolSet).sort()

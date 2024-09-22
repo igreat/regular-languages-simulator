@@ -254,7 +254,7 @@ class Char extends Regex {
         const startState = "0";
         const acceptStates = ["1"];
         const table: NFATransitionTable = {
-            "0": { [this.value]: ["1"] }
+            "0": { [this.value]: ["1"] },
         };
 
         return new NFA(startState, acceptStates, table);
@@ -318,7 +318,29 @@ class EmptySet extends Regex {
     }
 }
 
+function validateRegex(input: string): boolean {
+    // for now just check for balanced parentheses
+    let balance = 0;
+    for (const c of input) {
+        if (c === "(") {
+            balance++;
+        } else if (c === ")") {
+            balance--;
+        }
+
+        if (balance < 0) {
+            return false;
+        }
+    }
+
+    return balance === 0;
+}
+
 function parseRegex(input: string): Regex {
+    if (!validateRegex(input)) {
+        throw new Error("Invalid regex");
+    }
+
     input = insertImplicitConcats(input);
 
     const operations: string[] = [];

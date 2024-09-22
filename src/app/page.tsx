@@ -11,6 +11,7 @@ import { NFA } from '~/simulator/nfa';
 import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../utils/utils";
 import exampleNFAJson from "../../data/even_0s_or_1s_nfa.json";
 import { GNFA } from '~/simulator/gnfa';
+import { EmptySet, parseRegex } from '~/simulator/regex';
 
 export default function HomePage() {
   const [currentStates, setCurrentStates] = useState<string[]>([]);
@@ -27,6 +28,8 @@ export default function HomePage() {
   const [data, setData] = useState<GraphData>(
     NFAJsonToGraphData(exampleNFAJson as NFAJson)
   );
+  const [regexInput, setRegexInput] = useState<string>("");
+  const [regexInputError, setRegexInputError] = useState<string>("");
 
   const [isReducingToRegex, setIsReducingToRegex] = useState<boolean>(false);
   const [isGNFA, setIsGNFA] = useState<boolean>(false);
@@ -66,6 +69,46 @@ export default function HomePage() {
         <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
           {/* NFA and Buttons Section*/}
           <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
+            {/* Regex to NFA input box & button */}
+            <div className="flex flex-row items-center justify-center w-full gap-4">
+              <input
+                type="text"
+                value={regexInput}
+                onChange={(e) => setRegexInput(e.target.value)}
+                placeholder="Enter a regular expression"
+                className="p-2 text-blue-300 w-full bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm"
+              />
+              <button
+                onClick={() => {
+                  try {
+                    if (!regexInput) {
+                      setRegexInputError("Are you sure you want empty regex? Enter () for empty regex.");
+                      return;
+                    }
+                    const parsed = parseRegex(regexInput) ?? new EmptySet();
+                    console.log(parsed);
+                    const nfa = parsed.toNFA();
+                    setNFA(nfa);
+                    setData(NFAJsonToGraphData(nfa.toJSON()));
+                    setCurrentStates([]);
+                    setInputPos(0);
+                    setSimulation(null);
+                    setIsGNFA(false);
+                    setIsRemovingState(false);
+                    setIsReducingToRegex(false);
+                    setGnfa(null);
+                    setRegexInputError("");
+                  } catch (e) {
+                    setRegexInputError((e as Error).message);
+                  }
+                }}
+                className="bg-cyan-900 text-white rounded-md py-2 px-4 text-sm font-bold border-2 border-cyan-800 w-2/5">
+                Regex to NFA
+              </button>
+            </div>
+            {/* error message here */}
+            {regexInputError && <p className="text-red-500 text-sm font-bold">{regexInputError}</p>}
+
             {/* Buttons: Convert to DFA, Minimize, Relabel and Copy to Table */}
             <div className="flex flex-row justify-between gap-4 w-full">
               <button
@@ -85,7 +128,7 @@ export default function HomePage() {
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
-                Convert to DFA
+                NFA to DFA
               </button>
               <button
                 onClick={() => {
@@ -107,7 +150,7 @@ export default function HomePage() {
                   setIsGNFA(false);
                   setIsRemovingState(false);
                   setIsReducingToRegex(false);
-                  setGnfa(null); 
+                  setGnfa(null);
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -182,7 +225,7 @@ export default function HomePage() {
               )}
             </div>
             {/* Simulation Part */}
-            <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState}/>
+            <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
             <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
               <input
                 type="text"
