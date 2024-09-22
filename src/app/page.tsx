@@ -91,6 +91,40 @@ export default function HomePage() {
     }
   }
 
+  const handleRelabel = () => {
+    if (!nfa)
+      return;
+
+    const relabeled = nfa.relabeled();
+    const relabelMap = nfa.getRelabelingMap();
+    const initialPositions: Record<string, [number, number]> = {};
+    const nodeToIndex = data.nodeToIndex;
+    const indexToNode = new Map<number, string>();
+    for (const [key, value] of nodeToIndex) {
+      indexToNode.set(value, relabelMap.get(key)!);
+    }
+
+    for (let i = 0; i < data.nodes.length; i++) {
+      const nodeKey = indexToNode.get(i);
+      const node = data.nodes[i];
+      if (nodeKey && node) {
+        initialPositions[nodeKey] = [node.x!, node.y!];
+      }
+    }
+    console.log(initialPositions);
+
+    setNFA(relabeled);
+    setData(NFAJsonToGraphData(relabeled.toJSON(), initialPositions));
+    setCurrentStates([]);
+    setInputPos(0);
+    setSimulation(null);
+    setIsGNFA(false);
+    setIsRemovingState(false);
+    setIsReducingToRegex(false);
+    setGnfa(null);
+    setFinalRegex("");
+  }
+
   return (
     <>
       <main className="flex flex-col items-center justify-center w-full px-6">
@@ -187,24 +221,7 @@ export default function HomePage() {
                 Minimize
               </button>
               <button
-                onClick={() => {
-                  // for now only allow relabelling of nfas that are dfas
-                  if (!nfa)
-                    return;
-
-                  // nfa needs to be a DFA, otherwise display an error message
-                  const relabeled = nfa.relabeled();
-                  setNFA(relabeled);
-                  setData(NFAJsonToGraphData(relabeled.toJSON()));
-                  setCurrentStates([]);
-                  setInputPos(0);
-                  setSimulation(null);
-                  setIsGNFA(false);
-                  setIsRemovingState(false);
-                  setIsReducingToRegex(false);
-                  setGnfa(null);
-                  setFinalRegex("");
-                }}
+                onClick={handleRelabel}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
                 Relabel

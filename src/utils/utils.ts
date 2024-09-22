@@ -32,9 +32,17 @@ function NFAJsonToNodeToIndexMap(data: NFAJson): Map<string, number> {
     return nodeToIndex;
 }
 
-export function NFAJsonToGraphData(data: NFAJson): GraphData {
+export function NFAJsonToGraphData(data: NFAJson, initialPositions?: Record<string, [number, number]>): GraphData {
     const nodeToIndex = NFAJsonToNodeToIndexMap(data);
     const nodes: d3.SimulationNodeDatum[] = Array.from({ length: nodeToIndex.size }, () => ({}));
+    if (initialPositions) {
+        for (const [node, index] of nodeToIndex) {
+            if (initialPositions[node]) {
+                nodes[index] = { x: initialPositions[node][0], y: initialPositions[node][1] };
+            }
+        }
+    }
+    
     const nodeLabels: string[] = Array.from({ length: nodeToIndex.size }, () => (""));
     for (const [node, index] of nodeToIndex) {
         nodeLabels[index] = node.toString()

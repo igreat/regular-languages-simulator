@@ -163,7 +163,7 @@ class NFA {
         return true;
     }
 
-    relabeled(): NFA {
+    getRelabelingMap(): Map<string, string> {
         const newLabels = new Map<string, string>();
         const queue = new Queue<string>(Array.from(this.epsilonClosure(this.startState)));
         let curr = 0;
@@ -184,6 +184,12 @@ class NFA {
                 }
             }
         }
+
+        return newLabels;
+    }
+
+    relabeled(): NFA {
+        const newLabels = this.getRelabelingMap();
 
         const newTable: NFATransitionTable = {};
         for (const [src, transitions] of Object.entries(this.table)) {

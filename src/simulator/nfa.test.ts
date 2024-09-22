@@ -130,73 +130,73 @@ describe("Convert NFA that accepts strings ending with 'ab' to equivalent DFA", 
             "0,2,∅": { a: "0,1,∅", b: "0,∅" },
             "0,∅": { a: "0,1,∅", b: "0,∅" },
         });
-});
-
-test("Generated DFA structure matches the target DFA", () => {
-    const generatedDFAJson = generated_dfa.toJSON();
-    const targetDFAJson = target_dfa.toJSON();
-
-    // Compare accepting states
-    expect(generatedDFAJson.acceptStates.sort()).toEqual(targetDFAJson.acceptStates.sort());
-
-    // Compare transition tables
-    expect(generatedDFAJson.table).toEqual(targetDFAJson.table);
-});
-
-test("DFA correctly accepts strings ending with 'ab'", () => {
-    const testCases = [
-        { input: "ab", expected: true },
-        { input: "aab", expected: true },
-        { input: "aaab", expected: true },
-        { input: "cab", expected: true },
-        { input: "cabab", expected: true },
-        { input: "abcab", expected: true },
-        { input: "aabb", expected: false },
-        { input: "aba", expected: false },
-        { input: "aaba", expected: false },
-        { input: "baba", expected: false },
-        { input: "", expected: false },
-        { input: "a", expected: false },
-        { input: "b", expected: false },
-        { input: "ba", expected: false },
-        { input: "abab", expected: true },
-        { input: "abbaab", expected: true },
-        { input: "abbbab", expected: true },
-        { input: "ababab", expected: true },
-        { input: "ababa", expected: false }
-    ];
-
-    testCases.forEach(({ input, expected }) => {
-        expect(generated_dfa.accepts(input)).toBe(expected);
     });
-});
 
-test("Generated DFA is equivalent to the target DFA", () => {
-    // Helper function to generate all possible strings up to a certain length
-    const generateStrings = (alphabet: string[], maxLength: number): string[] => {
-        const results: string[] = [''];
-        for (let length = 1; length <= maxLength; length++) {
-            const newStrings: string[] = [];
-            for (const str of results.slice(results.length - Math.pow(alphabet.length, length - 1))) {
-                for (const char of alphabet) {
-                    newStrings.push(str + char);
+    test("Generated DFA structure matches the target DFA", () => {
+        const generatedDFAJson = generated_dfa.toJSON();
+        const targetDFAJson = target_dfa.toJSON();
+
+        // Compare accepting states
+        expect(generatedDFAJson.acceptStates.sort()).toEqual(targetDFAJson.acceptStates.sort());
+
+        // Compare transition tables
+        expect(generatedDFAJson.table).toEqual(targetDFAJson.table);
+    });
+
+    test("DFA correctly accepts strings ending with 'ab'", () => {
+        const testCases = [
+            { input: "ab", expected: true },
+            { input: "aab", expected: true },
+            { input: "aaab", expected: true },
+            { input: "cab", expected: true },
+            { input: "cabab", expected: true },
+            { input: "abcab", expected: true },
+            { input: "aabb", expected: false },
+            { input: "aba", expected: false },
+            { input: "aaba", expected: false },
+            { input: "baba", expected: false },
+            { input: "", expected: false },
+            { input: "a", expected: false },
+            { input: "b", expected: false },
+            { input: "ba", expected: false },
+            { input: "abab", expected: true },
+            { input: "abbaab", expected: true },
+            { input: "abbbab", expected: true },
+            { input: "ababab", expected: true },
+            { input: "ababa", expected: false }
+        ];
+
+        testCases.forEach(({ input, expected }) => {
+            expect(generated_dfa.accepts(input)).toBe(expected);
+        });
+    });
+
+    test("Generated DFA is equivalent to the target DFA", () => {
+        // Helper function to generate all possible strings up to a certain length
+        const generateStrings = (alphabet: string[], maxLength: number): string[] => {
+            const results: string[] = [''];
+            for (let length = 1; length <= maxLength; length++) {
+                const newStrings: string[] = [];
+                for (const str of results.slice(results.length - Math.pow(alphabet.length, length - 1))) {
+                    for (const char of alphabet) {
+                        newStrings.push(str + char);
+                    }
                 }
+                results.push(...newStrings);
             }
-            results.push(...newStrings);
-        }
-        return results;
-    };
+            return results;
+        };
 
-    const alphabet = ['a', 'b'];
-    const maxLength = 5; // Adjust as needed for thoroughness
-    const allStrings = generateStrings(alphabet, maxLength);
+        const alphabet = ['a', 'b'];
+        const maxLength = 5; // Adjust as needed for thoroughness
+        const allStrings = generateStrings(alphabet, maxLength);
 
-    allStrings.forEach(str => {
-        const generatedAccepts = generated_dfa.accepts(str);
-        const targetAccepts = target_dfa.accepts(str);
-        expect(generatedAccepts).toBe(targetAccepts);
+        allStrings.forEach(str => {
+            const generatedAccepts = generated_dfa.accepts(str);
+            const targetAccepts = target_dfa.accepts(str);
+            expect(generatedAccepts).toBe(targetAccepts);
+        });
     });
-});
 });
 
 test("NFA is DFA", () => {
