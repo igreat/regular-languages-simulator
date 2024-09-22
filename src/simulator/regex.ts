@@ -17,7 +17,7 @@ class Concat extends Regex {
         const left_nfa = this.left.toNFA();
         const right_nfa = this.right.toNFA();
         const table: NFATransitionTable = {};
-        
+
         // ensure no state is named the same
         const labelsLeft = new Map<string, string>();
         let curr = 0;
@@ -30,7 +30,7 @@ class Concat extends Regex {
             labelsRight.set(state, curr.toString());
             curr++;
         }
-        
+
         // copy left table
         const left_table = left_nfa.getTable();
         for (const [src, transitions] of Object.entries(left_table)) {
@@ -40,7 +40,7 @@ class Concat extends Regex {
                 table[srcLabel][symbol] = targets.map((target) => labelsLeft.get(target)!);
             }
         }
-        
+
         // copy right table
         const right_table = right_nfa.getTable();
         for (const [src, transitions] of Object.entries(right_table)) {
@@ -89,8 +89,8 @@ class Concat extends Regex {
     }
 
     toString(isConcatSeq?: boolean): string {
-        const leftStr = this.left instanceof Concat ? this.left.toString(true) : this.left.toString(); 
-        const rightStr = this.right instanceof Concat ? this.right.toString(true) : this.right.toString(); 
+        const leftStr = this.left instanceof Concat ? this.left.toString(true) : this.left.toString();
+        const rightStr = this.right instanceof Concat ? this.right.toString(true) : this.right.toString();
 
         return (isConcatSeq ? "" : "(") + leftStr + rightStr + (isConcatSeq ? "" : ")");
     }
@@ -175,8 +175,8 @@ class Union extends Regex {
     }
 
     toString(isUnionSeq?: boolean): string {
-        const leftStr = this.left instanceof Union ? this.left.toString(true) : this.left.toString(); 
-        const rightStr = this.right instanceof Union ? this.right.toString(true) : this.right.toString(); 
+        const leftStr = this.left instanceof Union ? this.left.toString(true) : this.left.toString();
+        const rightStr = this.right instanceof Union ? this.right.toString(true) : this.right.toString();
 
         return (isUnionSeq ? "" : "(") + leftStr + "|" + rightStr + (isUnionSeq ? "" : ")");
     }
@@ -342,7 +342,6 @@ function parseRegex(input: string): Regex {
     }
 
     input = insertImplicitConcats(input);
-
     const operations: string[] = [];
     const operands: Regex[] = [];
     for (const c of input) {
@@ -351,6 +350,7 @@ function parseRegex(input: string): Regex {
                 operands.push(new Star(operands.pop()!));
                 break;
             case ")":
+                processConcat(operands, operations);
                 while (operations.length > 0 && operations.at(-1) !== "(") {
                     const operation = operations.pop()!;
                     console.assert(operation === "|", "Expected union operation");

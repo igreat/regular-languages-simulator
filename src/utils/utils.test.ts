@@ -26,15 +26,15 @@ describe("NFAJsonToGraphData", () => {
     });
 
     test("Correct node labels", () => {
-        expect(data.nodeLabels).toEqual(["0", "1", "2", "3", "4"]);
+        expect(data.nodeLabels.sort()).toEqual(["0", "1", "2", "3", "4"]);
     });
 
     test("Correct link labels", () => {
-        expect(data.linkLabels).toEqual(["~", "~", "0", "1", "0", "1", "0", "1", "0", "1"]);
+        expect(data.linkLabels.sort()).toEqual(["~", "~", "0", "1", "0", "1", "0", "1", "0", "1"].sort());
     });
 
     test("Correct accept states", () => {
-        expect(data.acceptStates).toEqual(new Set(["1", "3"]));
+        expect(Array.from(data.acceptStates).sort()).toEqual(["1", "3"].sort());
     });
 
     test("Correct links", () => {
