@@ -274,7 +274,14 @@ export default function HomePage() {
             </div>
             {/* Simulation Part */}
             <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
-            {finalRegex && <p className="text-green-500 text-sm font-bold">Final Regex: {finalRegex}</p>}
+            {finalRegex && <textarea
+              className="p-2 text-green-500 w-full h-10 bg-gray-800 border-2 border-green-600 rounded-md text-sm resize-none"
+              style={{ fontFamily: "JetBrains Mono, monospace" }}
+              rows={10}
+              cols={50}
+              value={finalRegex}
+              readOnly
+            />}
             <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
               <input
                 type="text"
