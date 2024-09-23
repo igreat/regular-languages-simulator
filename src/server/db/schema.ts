@@ -16,7 +16,7 @@ import {
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
-export const createTable = pgTableCreator((name) => `dfa-simulator_${name}`);
+export const createTable = pgTableCreator((name) => `regular-language-simulator_${name}`);
 
 export const posts = createTable(
   "post",
