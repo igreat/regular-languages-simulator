@@ -24,7 +24,7 @@ function TopNav() {
           Automata Simulator
         </Link>
         <a
-          href="https://github.com/igreat/automata-simulator"
+          href="https://github.com/igreat/regular-languages-simulator"
           target="_blank"
           rel="noopener noreferrer"
           className="text-white flex gap-2 text-base items-center"

@@ -36,6 +36,7 @@ export default function HomePage() {
   const [isRemovingState, setIsRemovingState] = useState<boolean>(false);
   const [gnfa, setGnfa] = useState<GNFA | null>(null);
   const [finalRegex, setFinalRegex] = useState<string>("");
+  const [trashStateHidden, setTrashStateHidden] = useState<boolean>(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -111,7 +112,6 @@ export default function HomePage() {
         initialPositions[nodeKey] = [node.x!, node.y!];
       }
     }
-    console.log(initialPositions);
 
     setNFA(relabeled);
     setData(NFAJsonToGraphData(relabeled.toJSON(), initialPositions));
@@ -123,6 +123,10 @@ export default function HomePage() {
     setIsReducingToRegex(false);
     setGnfa(null);
     setFinalRegex("");
+  }
+
+  const handleToggleTrashState = () => {
+    setTrashStateHidden(prev => !prev);
   }
 
   return (
@@ -215,6 +219,7 @@ export default function HomePage() {
                   setIsReducingToRegex(false);
                   setGnfa(null);
                   setFinalRegex("");
+                  console.log(minimized.getStates().length);
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -261,7 +266,7 @@ export default function HomePage() {
                     const regexStrings = newGnfa.getRegexStrings();
                     const startState = newGnfa.getStartState();
                     const acceptState = newGnfa.getAcceptState();
-                  
+
                     if (regexStrings[startState]?.[acceptState] !== undefined) {
                       setFinalRegex(regexStrings[startState][acceptState]);
                     } else {
@@ -270,7 +275,7 @@ export default function HomePage() {
                   } else {
                     setFinalRegex("");
                   }
-                  
+
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >
@@ -289,8 +294,24 @@ export default function HomePage() {
               )}
             </div>
             {/* Simulation Part */}
-            <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
-            {finalRegex && <textarea
+            <div style={{ position: 'relative' }}>
+              <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
+
+              <button
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  zIndex: 100,
+                }}
+                className={`${trashStateHidden ? "bg-green-500 border-green-600" : "bg-red-500 border-red-600"} text-white font-bold rounded-md py-2 px-1 text-xs border-2 max-w-24`}
+                onClick={handleToggleTrashState} 
+                title="Trash States are states that have no path to the accept state"
+              >
+                {/* Hide Trash States */}
+                {trashStateHidden ? "Show" : "Hide"} Trash States
+              </button>
+            </div>            {finalRegex && <textarea
               className="p-2 text-green-500 w-full h-10 bg-gray-800 border-2 border-green-600 rounded-md text-sm resize-none"
               style={{ fontFamily: "JetBrains Mono, monospace" }}
               rows={10}
