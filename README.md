@@ -26,7 +26,7 @@ A web app for simulating regular languages, including deterministic finite autom
 - [ ] Authentication
 - [ ] Add ability to stop forces and fix DFA/NFA
 - [x] Links unnaturally keep flipping around, fix that
-- [ ] Add ability to pan and zoom window (will need to slightly modify the force layout)
+- [x] Add ability to pan and zoom window (will need to slightly modify the force layout)
 
 Likely will abandon in favour of table based UI (simpler and might be more practical anyway)
 

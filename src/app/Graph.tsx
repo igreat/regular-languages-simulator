@@ -54,7 +54,14 @@ export default function Graph({
       data.linkLabels,
     );
 
-    setupZoom(svg, container);
+    const zoom = setupZoom(svg, container);
+
+    // Reset zoom to default when data changes
+    svg
+      .call(d3.zoom<SVGSVGElement, unknown>().transform, d3.zoomIdentity)
+      .transition()
+      .duration(750)
+      .call((selection) => zoom.transform(selection, d3.zoomIdentity));
 
     simulation.on("tick", () =>
       updateGraph(node, link, nodeLabel, linkLabel),
@@ -83,8 +90,6 @@ export default function Graph({
           }
           return "";
         });
-
-
     }
   }, [activeNodes, data.acceptStates, data.startState, indexToNode, isRemovingState]);
 
@@ -118,7 +123,10 @@ function setupSimulation(data: GraphData) {
     .force("x", d3.forceX().strength(0.02));
 }
 
-function setupZoom(svg: SVGSelection, container: d3.Selection<SVGGElement, unknown, null, undefined>) {
+function setupZoom(
+  svg: SVGSelection,
+  container: d3.Selection<SVGGElement, unknown, null, undefined>
+): d3.ZoomBehavior<SVGSVGElement, unknown> {
   const zoom = d3.zoom<SVGSVGElement, unknown>()
     .scaleExtent([0.5, 8])
     .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
@@ -126,6 +134,7 @@ function setupZoom(svg: SVGSelection, container: d3.Selection<SVGGElement, unkno
     });
 
   svg.call(zoom);
+  return zoom;
 }
 
 
