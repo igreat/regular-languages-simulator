@@ -9,11 +9,10 @@ import Graph from "./Graph";
 import InputTable from "./InputTable";
 import { NFA } from '~/simulator/nfa';
 import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../utils/utils";
-import initialNfa from "../../data/even_0s_or_1s_nfa.json";
 import { GNFA } from '~/simulator/gnfa';
 import { EmptySet, parseRegex } from '~/simulator/regex';
 
-export default function HomePage() {
+export default function HomePage({ initialNfa }: { initialNfa: NFAJson }) {
     const [currentStates, setCurrentStates] = useState<string[]>([]);
     const [simulation, setSimulation] = useState<Generator<string[], boolean> | null>(null);
     const [input, setInput] = useState<string>("");

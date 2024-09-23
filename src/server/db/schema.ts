@@ -1,36 +1,34 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-
 import { sql } from "drizzle-orm";
 import {
   index,
   pgTableCreator,
   serial,
-  timestamp,
   varchar,
+  text,
+  jsonb,
+  timestamp,
 } from "drizzle-orm/pg-core";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
 export const createTable = pgTableCreator((name) => `regular-language-simulator_${name}`);
 
-export const posts = createTable(
-  "post",
+export const nfa = createTable(
+  "nfa",
   {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }),
+    id: serial("id").primaryKey(), 
+    name: varchar("name", { length: 256 }).notNull(), 
+    startState: varchar("start_state", { length: 256 }).notNull(), 
+    acceptStates: text("accept_states").array().notNull(), 
+    table: jsonb("table").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-      () => new Date()
-    ),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .$onUpdate(() => new Date())
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
   },
-  (example) => ({
-    nameIndex: index("name_idx").on(example.name),
+  (nfa) => ({
+    nameIndex: index("name_idx").on(nfa.name),
+    tableGinIndex: index("table_gin_idx").on(sql`USING gin(${nfa.table})`), 
   })
 );
