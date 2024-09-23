@@ -127,6 +127,34 @@ export default function HomePage() {
 
   const handleToggleTrashState = () => {
     setTrashStateHidden(prev => !prev);
+    if (nfa) {
+      const newNFA = trashStateHidden ? nfa.trashStatesAdded() : nfa.trashStatesRemoved();
+      setNFA(newNFA);
+      const initialPositions: Record<string, [number, number]> = {};
+      const nodeToIndex = data.nodeToIndex;
+      const indexToNode = new Map<number, string>();
+      for (const [key, value] of nodeToIndex) {
+        indexToNode.set(value, key);
+      }
+
+      for (let i = 0; i < data.nodes.length; i++) {
+        const nodeKey = indexToNode.get(i);
+        const node = data.nodes[i];
+        if (nodeKey && node) {
+          initialPositions[nodeKey] = [node.x!, node.y!];
+        }
+      }
+
+      setData(NFAJsonToGraphData(newNFA.toJSON(), initialPositions));
+      setCurrentStates([]);
+      setInputPos(0);
+      setSimulation(null);
+      setIsGNFA(false);
+      setIsRemovingState(false);
+      setIsReducingToRegex(false);
+      setGnfa(null);
+      setFinalRegex("");
+    }
   }
 
   return (
@@ -219,7 +247,6 @@ export default function HomePage() {
                   setIsReducingToRegex(false);
                   setGnfa(null);
                   setFinalRegex("");
-                  console.log(minimized.getStates().length);
                 }}
                 className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
               >

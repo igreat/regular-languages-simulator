@@ -209,6 +209,98 @@ class NFA {
         return new NFA(newStartState, Array.from(newAcceptStates), newTable);
     }
 
+    reversed(): NFA {
+        let newStartState = "ST_REV";
+        const newTable: NFATransitionTable = {};
+        for (const [src, transitions] of Object.entries(this.table)) {
+            if (src === newStartState) {
+                newStartState += "_";
+            }
+            for (const [symbol, targets] of Object.entries(transitions)) {
+                for (const target of targets) {
+                    if (target === newStartState) {
+                        newStartState += "_";
+                    }
+                    if (!newTable[target]) {
+                        newTable[target] = {};
+                    }
+                    // reverse the transition
+                    if (!newTable[target][symbol]) {
+                        newTable[target][symbol] = [];
+                    }
+                    newTable[target][symbol].push(src);
+                }
+            }
+        }
+
+        // epsilon transitions from new start state to all accept states of the original NFA
+        newTable[newStartState] = { "~": Array.from(this.acceptStates) };
+
+        return new NFA(newStartState, [this.startState], newTable);
+    }
+
+    trashStatesRemoved(): NFA {
+        const reversed = this.reversed();
+        const nonTrashStates = reversed.getReachableStates();
+        nonTrashStates.delete(reversed.startState);
+        // if start state is a trash state, the entire NFA is trash
+        if (!nonTrashStates.has(this.startState)) {
+            return new NFA(this.startState, [], {});
+        }
+
+        const newTable: NFATransitionTable = {};
+        for (const state of nonTrashStates) {
+            newTable[state] = {};
+            for (const [symbol, targets] of Object.entries(this.table[state] ?? [])) {
+                newTable[state][symbol] = targets.filter((t) => nonTrashStates.has(t));
+            }
+        }
+
+        return new NFA(this.startState, Array.from(this.acceptStates), newTable);
+    }
+
+    trashStatesAdded(): NFA {
+        const trashState = "∅";
+        // basically all null transitions are replaced with transitions to trash state
+        const newTable: NFATransitionTable = {};
+        for (const state of this.states) {
+            newTable[state] = {};
+            for (const symbol of this.symbols) {
+                newTable[state][symbol] = (!this.table[state]?.[symbol]?.length)
+                    ? [trashState]
+                    : this.table[state]?.[symbol] ?? [];
+            }
+            // include epsilon transitions if exist
+            newTable[state]["~"] = this.table[state]?.["~"] ?? [];
+        }
+
+        // trash state transitions to itself for all symbols
+        newTable[trashState] = {};
+        for (const symbol of this.symbols) {
+            newTable[trashState][symbol] = [trashState];
+        }
+
+        return new NFA(this.startState, Array.from(this.acceptStates), newTable);
+    }
+
+    getReachableStates(): Set<string> {
+        const reachable = new Set<string>();
+        const queue = new Queue<string>(Array.from(this.epsilonClosure(this.startState)));
+        while (!queue.isEmpty()) {
+            const state = queue.pop();
+            if (reachable.has(state))
+                continue;
+            reachable.add(state);
+            for (const transitions of Object.values(this.table[state] ?? [])) {
+                for (const target of transitions) {
+                    this.epsilonClosure(target).forEach((u) => queue.enqueue(u));
+                }
+            }
+        }
+
+        return reachable;
+    }
+
     getStates(): string[] {
         // return a copy of the states
         return [...this.states];
