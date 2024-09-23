@@ -121,11 +121,11 @@ function setupSimulation(data: GraphData) {
 function setupZoom(svg: SVGSelection, container: d3.Selection<SVGGElement, unknown, null, undefined>) {
   const zoom = d3.zoom<SVGSVGElement, unknown>()
     .scaleExtent([0.5, 8])
-    .on("zoom", (event) => {
-      container.attr("transform", event.transform);
+    .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
+      container.attr("transform", event.transform.toString());
     });
 
-  svg.call(zoom as any);
+  svg.call(zoom);
 }
 
 
