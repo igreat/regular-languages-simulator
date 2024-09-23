@@ -35,19 +35,26 @@ export default function Graph({
       .attr("width", width + margin.left + margin.right)
       .attr("height", height + margin.top + margin.bottom)
       .attr("viewBox", [-width / 2, -height / 2, width, height])
+      .attr("preserveAspectRatio", "xMidYMid meet")
       .attr("style", "max-width: 100%; height: auto;");
 
     setupMarkers(svg);
+
+    // Create a container group for all graph elements
+    const container = svg.append("g").attr("class", "graph-container");
+
     const simulation = setupSimulation(data);
-    const link = renderLinks(svg, data.links);
-    const node = renderNodes(svg, data.nodes, simulation, isRemovingState, handleDeleteState, indexToNode);
+    const link = renderLinks(container, data.links);
+    const node = renderNodes(container, data.nodes, simulation, isRemovingState, handleDeleteState, indexToNode);
     const { nodeLabel, linkLabel } = renderLabels(
-      svg,
+      container,
       data.nodes,
       data.nodeLabels,
       data.links,
       data.linkLabels,
     );
+
+    setupZoom(svg, container);
 
     simulation.on("tick", () =>
       updateGraph(node, link, nodeLabel, linkLabel),
@@ -111,11 +118,22 @@ function setupSimulation(data: GraphData) {
     .force("x", d3.forceX().strength(0.02));
 }
 
+function setupZoom(svg: SVGSelection, container: d3.Selection<SVGGElement, unknown, null, undefined>) {
+  const zoom = d3.zoom<SVGSVGElement, unknown>()
+    .scaleExtent([0.5, 8])
+    .on("zoom", (event) => {
+      container.attr("transform", event.transform);
+    });
+
+  svg.call(zoom as any);
+}
+
+
 function renderLinks(
-  svg: SVGSelection,
+  container: d3.Selection<SVGGElement, unknown, null, undefined>,
   links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[],
 ): LinkSelection {
-  const link = svg
+  const link = container
     .append("g")
     .attr("stroke", "#aaa")
     .attr("stroke-opacity", 1)
@@ -130,14 +148,14 @@ function renderLinks(
 }
 
 function renderNodes(
-  svg: SVGSelection,
+  container: d3.Selection<SVGGElement, unknown, null, undefined>,
   nodes: d3.SimulationNodeDatum[],
   simulation: d3.Simulation<d3.SimulationNodeDatum, undefined>,
   isRemovingState: boolean,
   handleDeleteState: (node: string) => void,
   indexToNode: Map<number, string>,
 ): NodeSelection {
-  const node = svg
+  const node = container
     .append("g")
     .attr("stroke", "#fff")
     .attr("stroke-width", 2.0)
@@ -172,7 +190,7 @@ function renderNodes(
 }
 
 function renderLabels(
-  svg: SVGSelection,
+  container: d3.Selection<SVGGElement, unknown, null, undefined>,
   nodes: d3.SimulationNodeDatum[],
   nodeLabels: string[],
   links: d3.SimulationLinkDatum<d3.SimulationNodeDatum>[],
@@ -181,7 +199,7 @@ function renderLabels(
   nodeLabel: NodeLabelSelection;
   linkLabel: LinkLabelSelection;
 } {
-  const nodeLabel = svg
+  const nodeLabel = container
     .append("g")
     .attr("text-anchor", "middle")
     .attr("font-size", 12)
@@ -193,7 +211,7 @@ function renderLabels(
     .join("text")
     .text((_, i) => nodeLabels[i] ?? "");
 
-  const linkLabel = svg
+  const linkLabel = container
     .append("g")
     .attr("text-anchor", "middle")
     .attr("font-size", 12)
