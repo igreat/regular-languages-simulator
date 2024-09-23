@@ -81,7 +81,7 @@ function InputTable({ onNFAChange, initialNFA }: InputTableProps) {
     }
 
     return (
-        <div className="p-4 bg-gray-800 text-white rounded-md w-full overflow-x-auto">
+        <div className="p-4 bg-gray-800 text-white rounded-md w-full overflow-x-auto text-sm">
             {/* Section to add a new input symbol */}
             <div className="flex items-center mb-4">
                 <button

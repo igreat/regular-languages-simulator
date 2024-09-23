@@ -162,7 +162,7 @@ export default function HomePage() {
       <main className="flex flex-col items-center justify-center w-full px-6">
         <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
           {/* NFA and Buttons Section*/}
-          <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
+          <div className="md:w-1/2 flex flex-col items-center justify-start gap-4 text-sm">
             {/* Regex to NFA input box & button */}
             <div className="flex flex-row items-center justify-center w-full gap-4">
               <input
@@ -170,7 +170,8 @@ export default function HomePage() {
                 value={regexInput}
                 onChange={(e) => setRegexInput(e.target.value)}
                 placeholder="Enter a regular expression"
-                className="p-2 text-blue-300 w-full bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm"
+                style={{ fontFamily: "JetBrains Mono, monospace" }}
+                className="p-2 text-blue-300 w-full bg-gray-800 font-mono border-2 border-gray-600 rounded-md"
               />
               <button
                 onClick={() => {
@@ -196,12 +197,12 @@ export default function HomePage() {
                     setRegexInputError((e as Error).message);
                   }
                 }}
-                className="bg-cyan-900 text-white rounded-md py-2 px-4 text-sm font-bold border-2 border-cyan-800 w-2/5">
+                className="bg-cyan-900 text-white rounded-md py-2 px-4 font-bold border-2 border-cyan-800 w-2/5">
                 Regex to NFA
               </button>
             </div>
             {/* error message here */}
-            {regexInputError && <p className="text-red-500 text-sm font-bold">{regexInputError}</p>}
+            {regexInputError && <p className="text-red-500 font-bold">{regexInputError}</p>}
 
             {/* Buttons: Convert to DFA, Minimize, Relabel and Copy to Table */}
             <div className="flex flex-row justify-between gap-4 w-full">
@@ -221,7 +222,7 @@ export default function HomePage() {
                   setGnfa(null);
                   setFinalRegex("");
                 }}
-                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
               >
                 NFA to DFA
               </button>
@@ -248,13 +249,13 @@ export default function HomePage() {
                   setGnfa(null);
                   setFinalRegex("");
                 }}
-                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
               >
                 Minimize
               </button>
               <button
                 onClick={handleRelabel}
-                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
               >
                 Relabel
               </button>
@@ -264,7 +265,7 @@ export default function HomePage() {
                     return;
                   setTableNfaJson(nfa.toJSON());
                 }}
-                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
               >
                 Copy to Table
               </button>
@@ -275,7 +276,7 @@ export default function HomePage() {
                 onClick={() => {
                   setIsReducingToRegex(true);
                 }}
-                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
               >
                 Simplify to Regex
               </button>
@@ -304,7 +305,7 @@ export default function HomePage() {
                   }
 
                 }}
-                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
               >
                 Convert to GNFA
               </button>}
@@ -312,7 +313,7 @@ export default function HomePage() {
                 <div className="flex flex-col items-center justify-center w-full h-full">
                   {/* Toggle remove state */}
                   <button
-                    className={`${isRemovingState ? "bg-blue-500" : "bg-red-500"} text-white text-sm font-bold py-2 px-4 rounded`}
+                    className={`${isRemovingState ? "bg-blue-500" : "bg-red-500"} text-white text-sm font-bold py-2 px-2 rounded w-full`}
                     onClick={() => setIsRemovingState(prev => !prev)}
                   >
                     {isRemovingState ? "Stop Removing States" : "Start Removing States"}
@@ -332,14 +333,15 @@ export default function HomePage() {
                   zIndex: 100,
                 }}
                 className={`${trashStateHidden ? "bg-green-500 border-green-600" : "bg-red-500 border-red-600"} text-white font-bold rounded-md py-2 px-1 text-xs border-2 max-w-24`}
-                onClick={handleToggleTrashState} 
+                onClick={handleToggleTrashState}
                 title="Trash States are states that have no path to the accept state"
               >
                 {/* Hide Trash States */}
                 {trashStateHidden ? "Show" : "Hide"} Trash States
               </button>
-            </div>            {finalRegex && <textarea
-              className="p-2 text-green-500 w-full h-10 bg-gray-800 border-2 border-green-600 rounded-md text-sm resize-none"
+            </div>
+            {finalRegex && <textarea
+              className="p-2 text-green-500 w-full h-10 bg-gray-800 border-2 border-green-600 rounded-md resize-none"
               style={{ fontFamily: "JetBrains Mono, monospace" }}
               rows={10}
               cols={50}
@@ -352,7 +354,8 @@ export default function HomePage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Enter input string"
-                className="p-2 text-blue-300 w-full sm:w-2/3 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm"
+                style={{ fontFamily: "JetBrains Mono, monospace" }}
+                className="p-2 text-blue-300 w-full sm:w-2/3 bg-gray-800 font-mono border-2 border-gray-600 rounded-md"
               />
               <button
                 onClick={() => {
@@ -394,7 +397,7 @@ export default function HomePage() {
             {/* Text box to enter a custom NFA JSON */}
             <InputTable onNFAChange={handleNFAChange} initialNFA={tableNfaJson} />
             <textarea
-              className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-sm resize-none"
+              className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs resize-none"
               rows={10}
               cols={50}
               value={nfaJson}
