@@ -325,7 +325,7 @@ export default function HomePage() {
             <div style={{ position: 'relative' }}>
               <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
 
-              <button
+              {!isRemovingState && <button
                 style={{
                   position: 'absolute',
                   top: '10px',
@@ -338,7 +338,7 @@ export default function HomePage() {
               >
                 {/* Hide Trash States */}
                 {trashStateHidden ? "Show" : "Hide"} Trash States
-              </button>
+              </button>}
             </div>
             {finalRegex && <textarea
               className="p-2 text-green-500 w-full h-10 bg-gray-800 border-2 border-green-600 rounded-md resize-none"

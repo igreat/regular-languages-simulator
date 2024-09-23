@@ -28,7 +28,11 @@ A web app for simulating regular languages, including deterministic finite autom
 - [x] Links unnaturally keep flipping around, fix that
 - [x] Add ability to pan and zoom window (will need to slightly modify the force layout)
 
+## Unlikely TODO
+
+- [ ] Add ability to compare two NFAs side by side
+
 Likely will abandon in favour of table based UI (simpler and might be more practical anyway)
 
-- [ ] Creating DFA/NFA from UI drag and drop
-- [ ] Editing DFA/NFA from UI
+~~- [ ] Creating DFA/NFA from UI drag and drop~~
+~~- [ ] Editing DFA/NFA from UI~~
