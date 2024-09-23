@@ -22,6 +22,7 @@ export default function Graph({
     return map;
   }, [data.nodeToIndex]);
   const ref = useRef<SVGSVGElement | null>(null);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
   useEffect(() => {
     const svg = d3.select(ref.current) as SVGSelection;
@@ -54,15 +55,16 @@ export default function Graph({
       data.linkLabels,
     );
 
-    const zoom = setupZoom(svg, container);
+    setupZoom(svg, container, zoomRef);
 
     // Reset zoom to default when data changes
-    svg
-      .call(d3.zoom<SVGSVGElement, unknown>().transform, d3.zoomIdentity)
-      .transition()
-      .duration(750)
-      .call((selection) => zoom.transform(selection, d3.zoomIdentity));
-
+    if (zoomRef.current && ref.current) {
+      const svg = d3.select(ref.current);
+      svg.transition()
+        .duration(750)
+        .call((selection) => zoomRef.current!.transform(selection, d3.zoomIdentity));
+    }
+    
     simulation.on("tick", () =>
       updateGraph(node, link, nodeLabel, linkLabel),
     );
@@ -125,18 +127,18 @@ function setupSimulation(data: GraphData) {
 
 function setupZoom(
   svg: SVGSelection,
-  container: d3.Selection<SVGGElement, unknown, null, undefined>
-): d3.ZoomBehavior<SVGSVGElement, unknown> {
-  const zoom = d3.zoom<SVGSVGElement, unknown>()
-    .scaleExtent([0.5, 8])
+  container: d3.Selection<SVGGElement, unknown, null, undefined>,
+  zoomRef: React.MutableRefObject<d3.ZoomBehavior<SVGSVGElement, unknown> | null>
+): void {
+  const zoomBehavior = d3.zoom<SVGSVGElement, unknown>()
+    .scaleExtent([0.5, 8]) // Adjust the zoom scale as needed
     .on("zoom", (event: d3.D3ZoomEvent<SVGSVGElement, unknown>) => {
       container.attr("transform", event.transform.toString());
     });
 
-  svg.call(zoom);
-  return zoom;
+  svg.call(zoomBehavior);
+  zoomRef.current = zoomBehavior;
 }
-
 
 function renderLinks(
   container: d3.Selection<SVGGElement, unknown, null, undefined>,
