@@ -5,7 +5,7 @@ import { db } from '~/server/db';
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const presetNfas = await db.query.nfa.findMany({
+  const presetNfas = await db.query.nfaTable.findMany({
     orderBy: (model, { desc }) => desc(model.lastAccessedAt),
   });
 

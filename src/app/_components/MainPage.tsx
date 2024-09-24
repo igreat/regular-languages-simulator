@@ -12,7 +12,10 @@ import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../../utils/utils";
 import { GNFA } from '~/simulator/gnfa';
 import { EmptySet, parseRegex } from '~/simulator/regex';
 
-export default function HomePage({ presetNfas }: {
+import { InsertNFA, nfaTable, SelectNFA } from '~/server/db/schema';
+import { db } from '~/server/db';
+
+export default function MainPage({ presetNfas }: {
     presetNfas: {
         table: unknown;
         id: number;
@@ -33,7 +36,6 @@ export default function HomePage({ presetNfas }: {
         acceptStates: [],
         table: {}
     } as NFAJson;
-
 
     const [currentStates, setCurrentStates] = useState<string[]>([]);
     const [simulation, setSimulation] = useState<Generator<string[], boolean> | null>(null);
@@ -58,6 +60,10 @@ export default function HomePage({ presetNfas }: {
     const [gnfa, setGnfa] = useState<GNFA | null>(null);
     const [finalRegex, setFinalRegex] = useState<string>("");
     const [trashStateHidden, setTrashStateHidden] = useState<boolean>(false);
+
+    const [nfaTitle, setNfaTitle] = useState<string>("");
+    const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -178,33 +184,309 @@ export default function HomePage({ presetNfas }: {
         }
     }
 
+    const handleInsertNFA = async () => {
+        setIsSaving(true);
+        setSaveStatus(null);
+        try {
+            const nfaData: InsertNFA = {
+                name: nfaTitle || 'Unnamed NFA',
+                startState: tableNfaJson.startState,
+                acceptStates: tableNfaJson.acceptStates,
+                table: tableNfaJson.table,
+            };
+
+            const response = await fetch('/api/nfa/insert', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(nfaData),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setSaveStatus({ success: true, message: 'NFA saved successfully!' });
+            } else {
+                setSaveStatus({ success: false, message: `Error: ${result.error}` });
+            }
+        } catch (error) {
+            console.error('Error saving NFA:', error);
+            setSaveStatus({ success: false, message: 'An unexpected error occurred.' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     return (
-        <>
-            <main className="flex flex-col items-center justify-center w-full px-6">
-                <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
-                    {/* NFA and Buttons Section*/}
-                    <div className="md:w-1/2 flex flex-col items-center justify-start gap-4 text-sm">
-                        {/* Regex to NFA input box & button */}
-                        <div className="flex flex-row items-center justify-center w-full gap-4">
-                            <input
-                                type="text"
-                                value={regexInput}
-                                onChange={(e) => setRegexInput(e.target.value)}
-                                placeholder="Enter a regular expression"
-                                style={{ fontFamily: "JetBrains Mono, monospace" }}
-                                className="p-2 text-blue-300 w-full bg-gray-800 font-mono border-2 border-gray-600 rounded-md"
-                            />
+        <main className="flex flex-col items-center justify-center w-full px-6">
+            <div className="flex flex-col md:flex-row justify-start w-full max-w-6xl mx-auto py-4 gap-6">
+                {/* NFA and Buttons Section*/}
+                <div className="md:w-1/2 flex flex-col items-center justify-start gap-4 text-sm">
+                    {/* Regex to NFA input box & button */}
+                    <div className="flex flex-row items-center justify-center w-full gap-4">
+                        <input
+                            type="text"
+                            value={regexInput}
+                            onChange={(e) => setRegexInput(e.target.value)}
+                            placeholder="Enter a regular expression"
+                            style={{ fontFamily: "JetBrains Mono, monospace" }}
+                            className="p-2 text-blue-300 w-full bg-gray-800 font-mono border-2 border-gray-600 rounded-md"
+                        />
+                        <button
+                            onClick={() => {
+                                try {
+                                    if (!regexInput) {
+                                        setRegexInputError("Are you sure you want empty regex? Enter () for empty regex.");
+                                        return;
+                                    }
+                                    const parsed = parseRegex(regexInput) ?? new EmptySet();
+                                    const nfa = parsed.toNFA();
+                                    setNFA(nfa);
+                                    setData(NFAJsonToGraphData(nfa.toJSON()));
+                                    setCurrentStates([]);
+                                    setInputPos(0);
+                                    setSimulation(null);
+                                    setIsGNFA(false);
+                                    setIsRemovingState(false);
+                                    setIsReducingToRegex(false);
+                                    setGnfa(null);
+                                    setRegexInputError("");
+                                    setFinalRegex("");
+                                } catch (e) {
+                                    setRegexInputError((e as Error).message);
+                                }
+                            }}
+                            className="bg-cyan-900 text-white rounded-md py-2 px-4 font-bold border-2 border-cyan-800 w-2/5">
+                            Regex to NFA
+                        </button>
+                    </div>
+                    {/* error message here */}
+                    {regexInputError && <p className="text-red-500 font-bold">{regexInputError}</p>}
+
+                    {/* Buttons: Convert to DFA, Minimize, Relabel and Copy to Table */}
+                    <div className="flex flex-row justify-between gap-4 w-full">
+                        <button
+                            onClick={() => {
+                                if (!nfa)
+                                    return;
+                                const newNFA = nfa.toDFA().toNFA();
+                                setNFA(newNFA);
+                                setData(NFAJsonToGraphData(newNFA.toJSON()));
+                                setCurrentStates([]);
+                                setInputPos(0);
+                                setSimulation(null);
+                                setIsGNFA(false);
+                                setIsRemovingState(false);
+                                setIsReducingToRegex(false);
+                                setGnfa(null);
+                                setFinalRegex("");
+                            }}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
+                        >
+                            NFA to DFA
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (!nfa)
+                                    return;
+
+                                // nfa needs to be a DFA, otherwise display an error message
+                                if (!nfa.isDFA()) {
+                                    alert("NFA needs to be a DFA to minimize"); // TODO: make this more user friendly
+                                    return;
+                                }
+
+                                const minimized = nfa.toDFA().minimized().toNFA();
+                                setNFA(minimized);
+                                setData(NFAJsonToGraphData(minimized.toJSON()));
+                                setCurrentStates([]);
+                                setInputPos(0);
+                                setSimulation(null);
+                                setIsGNFA(false);
+                                setIsRemovingState(false);
+                                setIsReducingToRegex(false);
+                                setGnfa(null);
+                                setFinalRegex("");
+                            }}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
+                        >
+                            Minimize
+                        </button>
+                        <button
+                            onClick={handleRelabel}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
+                        >
+                            Relabel
+                        </button>
+                        <button
+                            onClick={() => {
+                                if (!nfa)
+                                    return;
+                                setTableNfaJson(nfa.toJSON());
+                            }}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
+                        >
+                            Copy to Table
+                        </button>
+                    </div>
+                    {/* Buttons: Simplify to Regex, Convert to GNFA */}
+                    <div className="flex flex-row justify-left gap-4 w-full">
+                        <button
+                            onClick={() => {
+                                setIsReducingToRegex(true);
+                            }}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
+                        >
+                            Simplify to Regex
+                        </button>
+                        {isReducingToRegex && <button
+                            onClick={() => {
+                                setIsGNFA(true);
+                                if (!nfa) return;
+                                const newGnfa = GNFA.fromNFA(nfa);
+                                setGnfa(newGnfa);
+                                setData(GNFAJsonToGraphData(newGnfa.toJSON()));
+                                setCurrentStates([]);
+                                setInputPos(0);
+                                setSimulation(null);
+                                if (newGnfa.isFinal()) {
+                                    const regexStrings = newGnfa.getRegexStrings();
+                                    const startState = newGnfa.getStartState();
+                                    const acceptState = newGnfa.getAcceptState();
+
+                                    if (regexStrings[startState]?.[acceptState] !== undefined) {
+                                        setFinalRegex(regexStrings[startState][acceptState]);
+                                    } else {
+                                        setFinalRegex("");
+                                    }
+                                } else {
+                                    setFinalRegex("");
+                                }
+
+                            }}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
+                        >
+                            Convert to GNFA
+                        </button>}
+                        {isGNFA && (
+                            <div className="flex flex-col items-center justify-center w-full h-full">
+                                {/* Toggle remove state */}
+                                <button
+                                    className={`${isRemovingState ? "bg-blue-500" : "bg-red-500"} text-white text-sm font-bold py-2 px-2 rounded w-full`}
+                                    onClick={() => setIsRemovingState(prev => !prev)}
+                                >
+                                    {isRemovingState ? "Stop Removing States" : "Start Removing States"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    {/* Simulation Part */}
+                    <div style={{ position: 'relative' }}>
+                        <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
+
+                        {!isRemovingState && <button
+                            style={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                zIndex: 100,
+                            }}
+                            className={`${trashStateHidden ? "bg-green-500 border-green-600" : "bg-red-500 border-red-600"} text-white font-bold rounded-md py-2 px-1 text-xs border-2 max-w-24`}
+                            onClick={handleToggleTrashState}
+                            title="Trash States are states that have no path to the accept state"
+                        >
+                            {/* Hide Trash States */}
+                            {trashStateHidden ? "Show" : "Hide"} Trash States
+                        </button>}
+                    </div>
+                    {finalRegex && <textarea
+                        className="p-2 text-green-500 w-full h-10 bg-gray-800 border-2 border-green-600 rounded-md resize-none"
+                        style={{ fontFamily: "JetBrains Mono, monospace" }}
+                        rows={10}
+                        cols={50}
+                        value={finalRegex}
+                        readOnly
+                    />}
+                    <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            placeholder="Enter input string"
+                            style={{ fontFamily: "JetBrains Mono, monospace" }}
+                            className="p-2 text-blue-300 w-full sm:w-2/3 bg-gray-800 font-mono border-2 border-gray-600 rounded-md"
+                        />
+                        <button
+                            onClick={() => {
+                                setInputPos(0);
+                                setCurrentStates([]);
+                                if (nfa) {
+                                    setSimulation(nfa.simulation(input));
+                                }
+                            }}
+                            className="bg-cyan-900 text-white rounded-md py-2 text-sm font-bold border-2 border-cyan-800 w-full sm:w-1/3"
+                        >
+                            Simulate
+                        </button>
+                    </div>
+                    {/* Buttons Below */}
+                    <div className="flex flex-row justify-center gap-4 w-full">
+                        <button
+                            onClick={() => {
+                                // Navigate or open the "Build Your Own" page/modal
+                            }}
+                            className="bg-blue-700 text-white font-bold rounded-md py-2 px-4 border-2 border-blue-600 flex-1 sm:flex-none"
+                        >
+                            Save NFA
+                        </button>
+                        <button
+                            onClick={() => {
+                                // Open file dialog or navigate to "Load" functionality
+                            }}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
+                        >
+                            Load NFA
+                        </button>
+                    </div>
+
+                </div>
+
+                {/* Input Table Section */}
+                <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
+                    {/* Loading preset NFAs */}
+                    <div className="flex flex-col gap-2 w-full">
+                        <label
+                            className="text-white font-bold"
+                            htmlFor="preset-nfa"
+                        >
+                            Preset NFAs
+                        </label>
+                        <div className="flex flex-row gap-2 w-full">
+                            <select
+                                id="preset-nfa"
+                                className="p-2 bg-gray-800 border-2 border-gray-600 rounded-md text-sm w-2/3"
+                                onChange={(e) => {
+                                    const selectedNfa = presetNfas.find((nfa) => nfa.id === parseInt(e.target.value));
+                                    if (selectedNfa) {
+                                        setTableNfaJson({
+                                            startState: selectedNfa.startState,
+                                            acceptStates: selectedNfa.acceptStates,
+                                            table: selectedNfa.table as NFATransitionTable
+                                        });
+                                    }
+                                }}
+                            >
+                                {presetNfas.map((nfa) => (
+                                    <option key={nfa.id} value={nfa.id}>{nfa.name}</option>
+                                ))}
+                            </select>
                             <button
                                 onClick={() => {
                                     try {
-                                        if (!regexInput) {
-                                            setRegexInputError("Are you sure you want empty regex? Enter () for empty regex.");
-                                            return;
-                                        }
-                                        const parsed = parseRegex(regexInput) ?? new EmptySet();
-                                        const nfa = parsed.toNFA();
-                                        setNFA(nfa);
-                                        setData(NFAJsonToGraphData(nfa.toJSON()));
+                                        const json = JSON.parse(nfaJson) as NFAJson;
+                                        setNFA(new NFA(json.startState, json.acceptStates, json.table));
+                                        setData(NFAJsonToGraphData(json));
                                         setCurrentStates([]);
                                         setInputPos(0);
                                         setSimulation(null);
@@ -212,279 +494,50 @@ export default function HomePage({ presetNfas }: {
                                         setIsRemovingState(false);
                                         setIsReducingToRegex(false);
                                         setGnfa(null);
-                                        setRegexInputError("");
                                         setFinalRegex("");
-                                    } catch (e) {
-                                        setRegexInputError((e as Error).message);
+                                    } catch (error) {
+                                        console.error("Invalid JSON:", error);
+                                        // Optionally, add user feedback for invalid JSON
                                     }
                                 }}
-                                className="bg-cyan-900 text-white rounded-md py-2 px-4 font-bold border-2 border-cyan-800 w-2/5">
-                                Regex to NFA
+                                className="bg-cyan-900 text-white rounded-md py-2 px-4 text-sm font-bold border-2 border-cyan-800 w-1/3"
+                            >
+                                Build NFA
                             </button>
                         </div>
-                        {/* error message here */}
-                        {regexInputError && <p className="text-red-500 font-bold">{regexInputError}</p>}
-
-                        {/* Buttons: Convert to DFA, Minimize, Relabel and Copy to Table */}
-                        <div className="flex flex-row justify-between gap-4 w-full">
-                            <button
-                                onClick={() => {
-                                    if (!nfa)
-                                        return;
-                                    const newNFA = nfa.toDFA().toNFA();
-                                    setNFA(newNFA);
-                                    setData(NFAJsonToGraphData(newNFA.toJSON()));
-                                    setCurrentStates([]);
-                                    setInputPos(0);
-                                    setSimulation(null);
-                                    setIsGNFA(false);
-                                    setIsRemovingState(false);
-                                    setIsReducingToRegex(false);
-                                    setGnfa(null);
-                                    setFinalRegex("");
-                                }}
-                                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
-                            >
-                                NFA to DFA
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (!nfa)
-                                        return;
-
-                                    // nfa needs to be a DFA, otherwise display an error message
-                                    if (!nfa.isDFA()) {
-                                        alert("NFA needs to be a DFA to minimize"); // TODO: make this more user friendly
-                                        return;
-                                    }
-
-                                    const minimized = nfa.toDFA().minimized().toNFA();
-                                    setNFA(minimized);
-                                    setData(NFAJsonToGraphData(minimized.toJSON()));
-                                    setCurrentStates([]);
-                                    setInputPos(0);
-                                    setSimulation(null);
-                                    setIsGNFA(false);
-                                    setIsRemovingState(false);
-                                    setIsReducingToRegex(false);
-                                    setGnfa(null);
-                                    setFinalRegex("");
-                                }}
-                                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
-                            >
-                                Minimize
-                            </button>
-                            <button
-                                onClick={handleRelabel}
-                                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
-                            >
-                                Relabel
-                            </button>
-                            <button
-                                onClick={() => {
-                                    if (!nfa)
-                                        return;
-                                    setTableNfaJson(nfa.toJSON());
-                                }}
-                                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
-                            >
-                                Copy to Table
-                            </button>
-                        </div>
-                        {/* Buttons: Simplify to Regex, Convert to GNFA */}
-                        <div className="flex flex-row justify-left gap-4 w-full">
-                            <button
-                                onClick={() => {
-                                    setIsReducingToRegex(true);
-                                }}
-                                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
-                            >
-                                Simplify to Regex
-                            </button>
-                            {isReducingToRegex && <button
-                                onClick={() => {
-                                    setIsGNFA(true);
-                                    if (!nfa) return;
-                                    const newGnfa = GNFA.fromNFA(nfa);
-                                    setGnfa(newGnfa);
-                                    setData(GNFAJsonToGraphData(newGnfa.toJSON()));
-                                    setCurrentStates([]);
-                                    setInputPos(0);
-                                    setSimulation(null);
-                                    if (newGnfa.isFinal()) {
-                                        const regexStrings = newGnfa.getRegexStrings();
-                                        const startState = newGnfa.getStartState();
-                                        const acceptState = newGnfa.getAcceptState();
-
-                                        if (regexStrings[startState]?.[acceptState] !== undefined) {
-                                            setFinalRegex(regexStrings[startState][acceptState]);
-                                        } else {
-                                            setFinalRegex("");
-                                        }
-                                    } else {
-                                        setFinalRegex("");
-                                    }
-
-                                }}
-                                className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
-                            >
-                                Convert to GNFA
-                            </button>}
-                            {isGNFA && (
-                                <div className="flex flex-col items-center justify-center w-full h-full">
-                                    {/* Toggle remove state */}
-                                    <button
-                                        className={`${isRemovingState ? "bg-blue-500" : "bg-red-500"} text-white text-sm font-bold py-2 px-2 rounded w-full`}
-                                        onClick={() => setIsRemovingState(prev => !prev)}
-                                    >
-                                        {isRemovingState ? "Stop Removing States" : "Start Removing States"}
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                        {/* Simulation Part */}
-                        <div style={{ position: 'relative' }}>
-                            <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
-
-                            {!isRemovingState && <button
-                                style={{
-                                    position: 'absolute',
-                                    top: '10px',
-                                    right: '10px',
-                                    zIndex: 100,
-                                }}
-                                className={`${trashStateHidden ? "bg-green-500 border-green-600" : "bg-red-500 border-red-600"} text-white font-bold rounded-md py-2 px-1 text-xs border-2 max-w-24`}
-                                onClick={handleToggleTrashState}
-                                title="Trash States are states that have no path to the accept state"
-                            >
-                                {/* Hide Trash States */}
-                                {trashStateHidden ? "Show" : "Hide"} Trash States
-                            </button>}
-                        </div>
-                        {finalRegex && <textarea
-                            className="p-2 text-green-500 w-full h-10 bg-gray-800 border-2 border-green-600 rounded-md resize-none"
+                    </div>
+                    {/* Text box to enter a custom NFA JSON */}
+                    <InputTable onNFAChange={handleNFAChange} initialNFA={tableNfaJson} />
+                    {/* Inserting NFA onto database */}
+                    <div className="flex flex-row gap-2 w-full text-sm">
+                        {/* the title to give the nfa */}
+                        <input
+                            type="text"
+                            value={nfaTitle}
+                            onChange={(e) => setNfaTitle(e.target.value)}
+                            placeholder="Enter NFA title"
                             style={{ fontFamily: "JetBrains Mono, monospace" }}
-                            rows={10}
-                            cols={50}
-                            value={finalRegex}
-                            readOnly
-                        />}
-                        <div className="flex flex-col sm:flex-row gap-3 w-full items-center">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Enter input string"
-                                style={{ fontFamily: "JetBrains Mono, monospace" }}
-                                className="p-2 text-blue-300 w-full sm:w-2/3 bg-gray-800 font-mono border-2 border-gray-600 rounded-md"
-                            />
-                            <button
-                                onClick={() => {
-                                    setInputPos(0);
-                                    setCurrentStates([]);
-                                    if (nfa) {
-                                        setSimulation(nfa.simulation(input));
-                                    }
-                                }}
-                                className="bg-cyan-900 text-white rounded-md py-2 text-sm font-bold border-2 border-cyan-800 w-full sm:w-1/3"
-                            >
-                                Simulate
-                            </button>
-                        </div>
-                        {/* Buttons Below */}
-                        <div className="flex flex-row justify-center gap-4 w-full">
-                            <button
-                                onClick={() => {
-                                    // Navigate or open the "Build Your Own" page/modal
-                                }}
-                                className="bg-blue-700 text-white font-bold rounded-md py-2 px-4 border-2 border-blue-600 flex-1 sm:flex-none"
-                            >
-                                Save NFA
-                            </button>
-                            <button
-                                onClick={() => {
-                                    // Open file dialog or navigate to "Load" functionality
-                                }}
-                                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
-                            >
-                                Load NFA
-                            </button>
-                        </div>
-
-                    </div>
-
-                    {/* Input Table Section */}
-                    <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
-                        {/* Loading preset NFAs */}
-                        <div className="flex flex-col gap-2 w-full">
-                            <label
-                                className="text-white font-bold"
-                                htmlFor="preset-nfa"
-                            >
-                                Preset NFAs
-                            </label>
-                            <div className="flex flex-row gap-2 w-full">
-                                <select
-                                    id="preset-nfa"
-                                    className="p-2 bg-gray-800 border-2 border-gray-600 rounded-md text-sm w-2/3"
-                                    onChange={(e) => {
-                                        const selectedNfa = presetNfas.find((nfa) => nfa.id === parseInt(e.target.value));
-                                        if (selectedNfa) {
-                                            setTableNfaJson({
-                                                startState: selectedNfa.startState,
-                                                acceptStates: selectedNfa.acceptStates,
-                                                table: selectedNfa.table as NFATransitionTable
-                                            });
-                                        }
-                                    }}
-                                >
-                                    {presetNfas.map((nfa) => (
-                                        <option key={nfa.id} value={nfa.id}>{nfa.name}</option>
-                                    ))}
-                                </select>
-                                <button
-                                    onClick={() => {
-                                        try {
-                                            const json = JSON.parse(nfaJson) as NFAJson;
-                                            setNFA(new NFA(json.startState, json.acceptStates, json.table));
-                                            setData(NFAJsonToGraphData(json));
-                                            setCurrentStates([]);
-                                            setInputPos(0);
-                                            setSimulation(null);
-                                            setIsGNFA(false);
-                                            setIsRemovingState(false);
-                                            setIsReducingToRegex(false);
-                                            setGnfa(null);
-                                            setFinalRegex("");
-                                        } catch (error) {
-                                            console.error("Invalid JSON:", error);
-                                            // Optionally, add user feedback for invalid JSON
-                                        }
-                                    }}
-                                    className="bg-cyan-900 text-white rounded-md py-2 px-4 text-sm font-bold border-2 border-cyan-800 w-1/3"
-                                >
-                                    Build NFA
-                                </button>
-                            </div>
-                        </div>
-                        {/* Text box to enter a custom NFA JSON */}
-                        <InputTable onNFAChange={handleNFAChange} initialNFA={tableNfaJson} />
-                        <textarea
-                            className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs resize-none"
-                            rows={10}
-                            cols={50}
-                            value={nfaJson}
-                            onChange={(e) => {
-                                setNFAJson(e.target.value);
-                            }}
+                            className="p-2 text-blue-300 bg-gray-800 font-mono border-2 border-gray-600 rounded-md w-2/3"
                         />
+                        <button
+                            onClick={handleInsertNFA}
+                            className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 w-1/3"
+                            disabled={isSaving}
+                        >
+                            {isSaving ? "Saving..." : "Save NFA"}
+                        </button>
                     </div>
+                    <textarea
+                        className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs resize-none"
+                        rows={10}
+                        cols={50}
+                        value={nfaJson}
+                        onChange={(e) => {
+                            setNFAJson(e.target.value);
+                        }}
+                    />
                 </div>
-            </main >
-            <footer>
-                {/* Basic padding for now */}
-                <div className="py-16"></div>
-            </footer>
-        </>
+            </div>
+        </main >
     );
 }

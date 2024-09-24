@@ -11,7 +11,7 @@ import {
 
 export const createTable = pgTableCreator((name) => `regular-language-simulator_${name}`);
 
-export const nfa = createTable(
+export const nfaTable = createTable(
   "nfa",
   {
     id: serial("id").primaryKey(), 
@@ -33,3 +33,6 @@ export const nfa = createTable(
     tableGinIndex: index("table_gin_idx").on(sql`USING gin(${nfa.table})`), 
   })
 );
+
+export type InsertNFA = typeof nfaTable.$inferInsert;
+export type SelectNFA = typeof nfaTable.$inferSelect;
