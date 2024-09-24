@@ -1,14 +1,14 @@
 "use client";
 import '~/styles/globals.css';
 
-import type { GraphData } from "../utils/utils";
+import type { GraphData } from "../../utils/utils";
 import type { NFAJson, NFATransitionTable } from '~/simulator/nfa';
 
 import { useEffect, useState } from "react";
 import Graph from "./Graph";
 import InputTable from "./InputTable";
 import { NFA } from '~/simulator/nfa';
-import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../utils/utils";
+import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../../utils/utils";
 import { GNFA } from '~/simulator/gnfa';
 import { EmptySet, parseRegex } from '~/simulator/regex';
 

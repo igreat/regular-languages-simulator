@@ -1,5 +1,5 @@
 import '~/styles/globals.css';
-import MainPage from './MainPage';
+import MainPage from './_components/MainPage';
 import { db } from '~/server/db';
 
 export const dynamic = "force-dynamic";
