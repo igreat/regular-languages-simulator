@@ -25,9 +25,9 @@ export default function HomePage({ presetNfas }: {
 }) {
     // Load the first preset NFA as the initial NFA
     const initialNfa = presetNfas[0] ? {
-        startState: presetNfas[0]?.startState,
-        acceptStates: presetNfas[0]?.acceptStates,
-        table: presetNfas[0]?.table as NFATransitionTable
+        startState: presetNfas[0].startState,
+        acceptStates: presetNfas[0].acceptStates,
+        table: presetNfas[0].table as NFATransitionTable
     } : { // empty NFA
         startState: "0",
         acceptStates: [],
@@ -426,7 +426,7 @@ export default function HomePage({ presetNfas }: {
                             <div className="flex flex-row gap-2 w-full">
                                 <select
                                     id="preset-nfa"
-                                    className="p-2 w-full bg-gray-800 border-2 border-gray-600 rounded-md text-sm w-2/3"
+                                    className="p-2 bg-gray-800 border-2 border-gray-600 rounded-md text-sm w-2/3"
                                     onChange={(e) => {
                                         const selectedNfa = presetNfas.find((nfa) => nfa.id === parseInt(e.target.value));
                                         if (selectedNfa) {
