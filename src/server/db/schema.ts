@@ -15,7 +15,7 @@ export const nfaTable = createTable(
   "nfa",
   {
     id: serial("id").primaryKey(), 
-    name: varchar("name", { length: 256 }).notNull(), 
+    title: varchar("title", { length: 256 }).unique().notNull(),
     startState: varchar("start_state", { length: 256 }).notNull(), 
     acceptStates: text("accept_states").array().notNull(), 
     table: jsonb("table").notNull(),
@@ -29,7 +29,7 @@ export const nfaTable = createTable(
     lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true })
   },
   (nfa) => ({
-    nameIndex: index("name_idx").on(nfa.name),
+    nameIndex: index("name_idx").on(nfa.title),
     tableGinIndex: index("table_gin_idx").on(sql`USING gin(${nfa.table})`), 
   })
 );

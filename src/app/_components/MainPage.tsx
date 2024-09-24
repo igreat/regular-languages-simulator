@@ -12,31 +12,9 @@ import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../../utils/utils";
 import { GNFA } from '~/simulator/gnfa';
 import { EmptySet, parseRegex } from '~/simulator/regex';
 
-import { InsertNFA, nfaTable, SelectNFA } from '~/server/db/schema';
-import { db } from '~/server/db';
+import { InsertNFA, SelectNFA } from '~/server/db/schema';
 
-export default function MainPage({ presetNfas }: {
-    presetNfas: {
-        table: unknown;
-        id: number;
-        startState: string;
-        acceptStates: string[];
-        name: string;
-        createdAt: Date;
-        updatedAt: Date;
-    }[]
-}) {
-    // Load the first preset NFA as the initial NFA
-    const initialNfa = presetNfas[0] ? {
-        startState: presetNfas[0].startState,
-        acceptStates: presetNfas[0].acceptStates,
-        table: presetNfas[0].table as NFATransitionTable
-    } : { // empty NFA
-        startState: "0",
-        acceptStates: [],
-        table: {}
-    } as NFAJson;
-
+export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson }>) {
     const [currentStates, setCurrentStates] = useState<string[]>([]);
     const [simulation, setSimulation] = useState<Generator<string[], boolean> | null>(null);
     const [input, setInput] = useState<string>("");
@@ -77,6 +55,40 @@ export default function MainPage({ presetNfas }: {
 
         return () => clearInterval(interval);
     }, [nfa, input, currentStates, inputPos, simulation]);
+
+    const [presetNfas, setPresetNfas] = useState<SelectNFA[]>([]);
+    const [isLoadingNfas, setIsLoadingNfas] = useState<boolean>(false);
+    const [fetchError, setFetchError] = useState<string>("");
+
+    // Fetch saved NFAs from the server
+    useEffect(() => {
+        const fetchNfas = async () => {
+            setIsLoadingNfas(true);
+            try {
+                const response = await fetch('/api/nfa', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (response.ok) {
+                    const data: SelectNFA[] = await response.json();
+                    setPresetNfas(data);
+                } else {
+                    const errorData = await response.json();
+                    setFetchError(errorData.error || 'Failed to fetch NFAs.');
+                }
+            } catch (error) {
+                console.error('Error fetching NFAs:', error);
+                setFetchError('An unexpected error occurred.');
+            } finally {
+                setIsLoadingNfas(false);
+            }
+        };
+
+        fetchNfas();
+    }, [saveStatus]);
 
     // Handle NFA changes from InputTable
     const handleNFAChange = (nfaJson: string) => {
@@ -185,17 +197,23 @@ export default function MainPage({ presetNfas }: {
     }
 
     const handleInsertNFA = async () => {
+        if (!nfaTitle) {
+            setSaveStatus({ success: false, message: 'Please enter a title for the NFA.' });
+            return;
+        }
+
         setIsSaving(true);
         setSaveStatus(null);
         try {
+            const nfaJsonObj = JSON.parse(nfaJson) as NFAJson;
             const nfaData: InsertNFA = {
-                name: nfaTitle || 'Unnamed NFA',
-                startState: tableNfaJson.startState,
-                acceptStates: tableNfaJson.acceptStates,
-                table: tableNfaJson.table,
+                title: nfaTitle,
+                startState: nfaJsonObj.startState,
+                acceptStates: nfaJsonObj.acceptStates,
+                table: nfaJsonObj.table,
             };
 
-            const response = await fetch('/api/nfa/insert', {
+            const response = await fetch('/api/nfa', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -203,12 +221,12 @@ export default function MainPage({ presetNfas }: {
                 body: JSON.stringify(nfaData),
             });
 
-            const result = await response.json();
+            const result: InsertNFA | { error: string } = await response.json();
 
             if (response.ok) {
                 setSaveStatus({ success: true, message: 'NFA saved successfully!' });
             } else {
-                setSaveStatus({ success: false, message: `Error: ${result.error}` });
+                setSaveStatus({ success: false, message: `Error: ${(result as { error: string }).error}` });
             }
         } catch (error) {
             console.error('Error saving NFA:', error);
@@ -217,6 +235,15 @@ export default function MainPage({ presetNfas }: {
             setIsSaving(false);
         }
     };
+
+    useEffect(() => {
+        if (saveStatus) {
+            const timer = setTimeout(() => {
+                setSaveStatus(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [saveStatus]);
 
     return (
         <main className="flex flex-col items-center justify-center w-full px-6">
@@ -430,26 +457,6 @@ export default function MainPage({ presetNfas }: {
                             Simulate
                         </button>
                     </div>
-                    {/* Buttons Below */}
-                    <div className="flex flex-row justify-center gap-4 w-full">
-                        <button
-                            onClick={() => {
-                                // Navigate or open the "Build Your Own" page/modal
-                            }}
-                            className="bg-blue-700 text-white font-bold rounded-md py-2 px-4 border-2 border-blue-600 flex-1 sm:flex-none"
-                        >
-                            Save NFA
-                        </button>
-                        <button
-                            onClick={() => {
-                                // Open file dialog or navigate to "Load" functionality
-                            }}
-                            className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 flex-1 sm:flex-none"
-                        >
-                            Load NFA
-                        </button>
-                    </div>
-
                 </div>
 
                 {/* Input Table Section */}
@@ -477,9 +484,11 @@ export default function MainPage({ presetNfas }: {
                                     }
                                 }}
                             >
-                                {presetNfas.map((nfa) => (
-                                    <option key={nfa.id} value={nfa.id}>{nfa.name}</option>
-                                ))}
+                                {!isLoadingNfas
+                                    ? (presetNfas.map((nfa) => (
+                                        <option key={nfa.id} value={nfa.id}>{nfa.title}</option>
+                                    )))
+                                    : <option value="0">Loading...</option>}
                             </select>
                             <button
                                 onClick={() => {
@@ -527,15 +536,11 @@ export default function MainPage({ presetNfas }: {
                             {isSaving ? "Saving..." : "Save NFA"}
                         </button>
                     </div>
-                    <textarea
-                        className="p-2 text-blue-300 w-full h-52 bg-gray-800 font-mono border-2 border-gray-600 rounded-md text-xs resize-none"
-                        rows={10}
-                        cols={50}
-                        value={nfaJson}
-                        onChange={(e) => {
-                            setNFAJson(e.target.value);
-                        }}
-                    />
+                    {saveStatus && (
+                        <p className={saveStatus.success ? 'text-green-500' : 'text-red-500'}>
+                            {saveStatus.message}
+                        </p>
+                    )}
                 </div>
             </div>
         </main >
