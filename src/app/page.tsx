@@ -19,15 +19,23 @@ export default async function HomePage() {
       } as NFAJson;
     } else {
       // Insert the default NFAs into the database
-      for (const nfa of defaultNfas) {
-        await insertNfa(nfa);
+      try {
+        for (const nfa of defaultNfas) {
+          await insertNfa(nfa);
+        }
+      } catch (error) {
+        console.error("Error inserting default NFAs:", error);
       }
     }
   } catch (error) {
     console.log("Error fetching initial NFA:", error);
     // Insert the default NFAs into the database
-    for (const nfa of defaultNfas) {
-      await insertNfa(nfa);
+    try {
+      for (const nfa of defaultNfas) {
+        await insertNfa(nfa);
+      }
+    } catch (error) {
+      console.error("Error inserting default NFAs:", error);
     }
   }
 

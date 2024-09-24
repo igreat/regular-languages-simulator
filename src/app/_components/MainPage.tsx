@@ -13,6 +13,7 @@ import { GNFA } from '~/simulator/gnfa';
 import { EmptySet, parseRegex } from '~/simulator/regex';
 
 import { InsertNFA, SelectNFA } from '~/server/db/schema';
+import { defaultNfas } from 'data/default_nfas';
 
 export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson }>) {
     const [currentStates, setCurrentStates] = useState<string[]>([]);
@@ -56,7 +57,7 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
         return () => clearInterval(interval);
     }, [nfa, input, currentStates, inputPos, simulation]);
 
-    const [presetNfas, setPresetNfas] = useState<SelectNFA[]>([]);
+    const [presetNfas, setPresetNfas] = useState<SelectNFA[]>(defaultNfas as SelectNFA[]);
     const [isLoadingNfas, setIsLoadingNfas] = useState<boolean>(false);
     const [fetchError, setFetchError] = useState<string>("");
 
