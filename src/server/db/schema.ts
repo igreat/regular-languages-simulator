@@ -26,6 +26,7 @@ export const nfa = createTable(
       .$onUpdate(() => new Date())
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
+    lastAccessedAt: timestamp("last_accessed_at", { withTimezone: true })
   },
   (nfa) => ({
     nameIndex: index("name_idx").on(nfa.name),
