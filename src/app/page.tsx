@@ -7,14 +7,11 @@ import exampleNfa from "../../data/even_0s_or_1s_nfa.json";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const initialNfaData = await db.query.nfa.findFirst();
-  const initialNfa: NFAJson  = initialNfaData ? {
-    startState: initialNfaData.startState,
-    acceptStates: initialNfaData.acceptStates,
-    table: initialNfaData.table as NFATransitionTable
-  } : exampleNfa;
-
+  const presetNfas = await db.query.nfa.findMany();
+  
   return (
-    <MainPage initialNfa={initialNfa} />
+    <>
+      <MainPage presetNfas={presetNfas} />
+    </>
   );
 }

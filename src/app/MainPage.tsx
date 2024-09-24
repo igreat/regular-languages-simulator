@@ -2,7 +2,7 @@
 import '~/styles/globals.css';
 
 import type { GraphData } from "../utils/utils";
-import type { NFAJson } from '~/simulator/nfa';
+import type { NFAJson, NFATransitionTable } from '~/simulator/nfa';
 
 import { useEffect, useState } from "react";
 import Graph from "./Graph";
@@ -12,7 +12,29 @@ import { GNFAJsonToGraphData, NFAJsonToGraphData } from "../utils/utils";
 import { GNFA } from '~/simulator/gnfa';
 import { EmptySet, parseRegex } from '~/simulator/regex';
 
-export default function HomePage({ initialNfa }: { initialNfa: NFAJson }) {
+export default function HomePage({ presetNfas }: {
+    presetNfas: {
+        table: unknown;
+        id: number;
+        startState: string;
+        acceptStates: string[];
+        name: string;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]
+}) {
+    // Load the first preset NFA as the initial NFA
+    const initialNfa = presetNfas[0] ? {
+        startState: presetNfas[0]?.startState,
+        acceptStates: presetNfas[0]?.acceptStates,
+        table: presetNfas[0]?.table as NFATransitionTable
+    } : { // empty NFA
+        startState: "0",
+        acceptStates: [],
+        table: {}
+    } as NFAJson;
+
+
     const [currentStates, setCurrentStates] = useState<string[]>([]);
     const [simulation, setSimulation] = useState<Generator<string[], boolean> | null>(null);
     const [input, setInput] = useState<string>("");
@@ -393,6 +415,58 @@ export default function HomePage({ initialNfa }: { initialNfa: NFAJson }) {
 
                     {/* Input Table Section */}
                     <div className="md:w-1/2 flex flex-col items-center justify-start gap-4">
+                        {/* Loading preset NFAs */}
+                        <div className="flex flex-col gap-2 w-full">
+                            <label
+                                className="text-white font-bold"
+                                htmlFor="preset-nfa"
+                            >
+                                Preset NFAs
+                            </label>
+                            <div className="flex flex-row gap-2 w-full">
+                                <select
+                                    id="preset-nfa"
+                                    className="p-2 w-full bg-gray-800 border-2 border-gray-600 rounded-md text-sm w-2/3"
+                                    onChange={(e) => {
+                                        const selectedNfa = presetNfas.find((nfa) => nfa.id === parseInt(e.target.value));
+                                        if (selectedNfa) {
+                                            setTableNfaJson({
+                                                startState: selectedNfa.startState,
+                                                acceptStates: selectedNfa.acceptStates,
+                                                table: selectedNfa.table as NFATransitionTable
+                                            });
+                                        }
+                                    }}
+                                >
+                                    {presetNfas.map((nfa) => (
+                                        <option key={nfa.id} value={nfa.id}>{nfa.name}</option>
+                                    ))}
+                                </select>
+                                <button
+                                    onClick={() => {
+                                        try {
+                                            const json = JSON.parse(nfaJson) as NFAJson;
+                                            setNFA(new NFA(json.startState, json.acceptStates, json.table));
+                                            setData(NFAJsonToGraphData(json));
+                                            setCurrentStates([]);
+                                            setInputPos(0);
+                                            setSimulation(null);
+                                            setIsGNFA(false);
+                                            setIsRemovingState(false);
+                                            setIsReducingToRegex(false);
+                                            setGnfa(null);
+                                            setFinalRegex("");
+                                        } catch (error) {
+                                            console.error("Invalid JSON:", error);
+                                            // Optionally, add user feedback for invalid JSON
+                                        }
+                                    }}
+                                    className="bg-cyan-900 text-white rounded-md py-2 px-4 text-sm font-bold border-2 border-cyan-800 w-1/3"
+                                >
+                                    Build NFA
+                                </button>
+                            </div>
+                        </div>
                         {/* Text box to enter a custom NFA JSON */}
                         <InputTable onNFAChange={handleNFAChange} initialNFA={tableNfaJson} />
                         <textarea
@@ -404,32 +478,9 @@ export default function HomePage({ initialNfa }: { initialNfa: NFAJson }) {
                                 setNFAJson(e.target.value);
                             }}
                         />
-                        <button
-                            onClick={() => {
-                                try {
-                                    const json = JSON.parse(nfaJson) as NFAJson;
-                                    setNFA(new NFA(json.startState, json.acceptStates, json.table));
-                                    setData(NFAJsonToGraphData(json));
-                                    setCurrentStates([]);
-                                    setInputPos(0);
-                                    setSimulation(null);
-                                    setIsGNFA(false);
-                                    setIsRemovingState(false);
-                                    setIsReducingToRegex(false);
-                                    setGnfa(null);
-                                    setFinalRegex("");
-                                } catch (error) {
-                                    console.error("Invalid JSON:", error);
-                                    // Optionally, add user feedback for invalid JSON
-                                }
-                            }}
-                            className="bg-cyan-900 text-white rounded-md py-2 px-4 text-sm font-bold border-2 border-cyan-800 w-full"
-                        >
-                            Build NFA
-                        </button>
                     </div>
                 </div>
-            </main>
+            </main >
             <footer>
                 {/* Basic padding for now */}
                 <div className="py-16"></div>
