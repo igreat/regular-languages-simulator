@@ -24,7 +24,7 @@ A web app for simulating regular languages, including deterministic finite autom
 - [x] Add ability to convert NFA into regex
 - [x] Loading preset/saved NFAs from database (Vercel Postgres)
 - [ ] Saving NFAs to database (Vercel Postgres)
-- [ ] Authentication
+- [x] Authentication
 - [ ] Add ability to stop forces and fix DFA/NFA
 - [x] Links unnaturally keep flipping around, fix that
 - [x] Add ability to pan and zoom window (will need to slightly modify the force layout)

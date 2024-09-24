@@ -7,7 +7,7 @@ import { Analytics } from '@vercel/analytics/react';
 import TopNav from "./_components/TopNav";
 import Footer from "./_components/Footer";
 
-import { ClerkProvider, SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+import { ClerkProvider } from '@clerk/nextjs'
 
 export const metadata: Metadata = {
   title: "Automata Simulator",
@@ -22,14 +22,6 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className={`${GeistSans.variable}`}>
         <body className="flex flex-col gap-4">
-          <header>
-            <SignedOut>
-              <SignInButton />
-            </SignedOut>
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-          </header>
           <TopNav />
           {children}
           <Footer />

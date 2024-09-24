@@ -47,7 +47,7 @@ export default function HomePage({ presetNfas }: {
         new NFA(initialNfa.startState, initialNfa.acceptStates, initialNfa.table)
     );
     const [data, setData] = useState<GraphData>(
-        NFAJsonToGraphData(initialNfa as NFAJson)
+        NFAJsonToGraphData(initialNfa)
     );
     const [regexInput, setRegexInput] = useState<string>("");
     const [regexInputError, setRegexInputError] = useState<string>("");
