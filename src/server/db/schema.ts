@@ -19,6 +19,7 @@ export const nfaTable = createTable(
     startState: varchar("start_state", { length: 256 }).notNull(), 
     acceptStates: text("accept_states").array().notNull(), 
     table: jsonb("table").notNull(),
+    userId: varchar("user_id", { length: 256 }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),

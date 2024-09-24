@@ -206,7 +206,7 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
         setSaveStatus(null);
         try {
             const nfaJsonObj = JSON.parse(nfaJson) as NFAJson;
-            const nfaData: InsertNFA = {
+            const nfaData: { title: string } & NFAJson = {
                 title: nfaTitle,
                 startState: nfaJsonObj.startState,
                 acceptStates: nfaJsonObj.acceptStates,

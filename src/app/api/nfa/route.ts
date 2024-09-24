@@ -1,13 +1,11 @@
 import { NextResponse } from 'next/server';
-import { db } from '~/server/db';
-import { InsertNFA, nfaTable } from '~/server/db/schema';
+import { getMyPresetNfas, insertNfa } from '~/server/queries';
+import { NFAJson } from '~/simulator/nfa';
 
 export async function GET(_request: Request) {
     try {
         // Fetch all NFAs from the database
-        const nfAs = await db.query.nfaTable.findMany({
-            orderBy: (model, { desc }) => desc(model.lastAccessedAt),
-        });
+        const nfAs = await getMyPresetNfas();
 
         // Return the NFAs as JSON
         return NextResponse.json(nfAs, { status: 200 });
@@ -19,14 +17,14 @@ export async function GET(_request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const data: InsertNFA = await request.json();
+        const data: { title: string } & NFAJson = await request.json();
 
         // TODO: implement an actual NFA validator here
         if (!data.title || !data.startState || !data.acceptStates || !data.table) {
             return NextResponse.json({ error: "Invalid NFA" }, { status: 400 });
         }
 
-        const insertedNFA = await db.insert(nfaTable).values(data);
+        const insertedNFA = await insertNfa(data);
 
         return NextResponse.json(insertedNFA, { status: 201 });
     } catch (error) {
