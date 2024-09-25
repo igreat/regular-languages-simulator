@@ -7,6 +7,8 @@ import {
   text,
   jsonb,
   timestamp,
+  uniqueIndex,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const createTable = pgTableCreator((name) => `regular-language-simulator_${name}`);
@@ -15,7 +17,7 @@ export const nfaTable = createTable(
   "nfa",
   {
     id: serial("id").primaryKey(), 
-    title: varchar("title", { length: 256 }).unique().notNull(),
+    title: varchar("title", { length: 256 }).notNull(),
     startState: varchar("start_state", { length: 256 }).notNull(), 
     acceptStates: text("accept_states").array().notNull(), 
     table: jsonb("table").notNull(),
@@ -31,7 +33,8 @@ export const nfaTable = createTable(
   },
   (nfa) => ({
     nameIndex: index("name_idx").on(nfa.title),
-    tableGinIndex: index("table_gin_idx").on(sql`USING gin(${nfa.table})`), 
+    userIdIndex: index("user_id_idx").on(nfa.userId),
+    uniqueUserTitle: unique().on(nfa.userId, nfa.title),
   })
 );
 

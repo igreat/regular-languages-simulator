@@ -3,9 +3,10 @@ import { db } from "./db";
 import { auth } from "@clerk/nextjs/server";
 import { InsertNFA, nfaTable } from "./db/schema";
 import { NFAJson } from "~/simulator/nfa";
+import { and, eq } from "drizzle-orm";
 
 export async function getMyPresetNfas() {
-    const user = auth(); 
+    const user = auth();
     if (!user.userId) throw new Error("Unothorized");
 
     const nfAs = await db.query.nfaTable.findMany({
@@ -34,7 +35,24 @@ export async function insertNfa(data: NFAJson) {
     const insertedNFA = await db.insert(nfaTable).values({
         ...data,
         userId: user.userId,
-    } as InsertNFA);
+    } as InsertNFA).onConflictDoUpdate({
+        target: [nfaTable.userId, nfaTable.title],
+        set: data,
+    });
 
     return insertedNFA;
+}
+
+export async function deleteNfa(title: string) {
+    const user = auth();
+    if (!user.userId) throw new Error("Unauthorized");
+
+    const deletedNFA = await db.delete(nfaTable).where(
+        and(
+            eq(nfaTable.userId, user.userId),
+            eq(nfaTable.title, title)
+        )
+    );
+
+    return deletedNFA;
 }

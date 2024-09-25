@@ -44,6 +44,9 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
     const [saveStatus, setSaveStatus] = useState<{ success: boolean; message: string } | null>(null);
     const [isSaving, setIsSaving] = useState(false);
 
+    const [isDeleting, setIsDeleting] = useState<boolean>(false);
+    const [deleteStatus, setDeleteStatus] = useState<{ success: boolean; message: string } | null>(null);
+
     useEffect(() => {
         const interval = setInterval(() => {
             if (inputPos > input.length) return;
@@ -89,7 +92,7 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
         };
 
         fetchNfas();
-    }, [saveStatus]);
+    }, [saveStatus, deleteStatus]);
 
     // Handle NFA changes from InputTable
     const handleNFAChange = (nfaJson: string) => {
@@ -237,6 +240,33 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
         }
     };
 
+    const handleDeleteNFA = async () => {
+        setIsDeleting(true);
+        setDeleteStatus(null);
+        try {
+            const response = await fetch('/api/nfa', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title: nfaTitle }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setDeleteStatus({ success: true, message: 'NFA deleted successfully!' });
+            } else {
+                setDeleteStatus({ success: false, message: `Error: ${(result as { error: string }).error}` });
+            }
+        } catch (error) {
+            console.error('Error deleting NFA:', error);
+            setDeleteStatus({ success: false, message: 'An unexpected error occurred.' });
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     useEffect(() => {
         if (saveStatus) {
             const timer = setTimeout(() => {
@@ -245,6 +275,15 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
             return () => clearTimeout(timer);
         }
     }, [saveStatus]);
+
+    useEffect(() => {
+        if (deleteStatus) {
+            const timer = setTimeout(() => {
+                setDeleteStatus(null);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [deleteStatus]);
 
     return (
         <main className="flex flex-col items-center justify-center w-full px-6">
@@ -482,6 +521,7 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                                             acceptStates: selectedNfa.acceptStates,
                                             table: selectedNfa.table as NFATransitionTable
                                         });
+                                        setNfaTitle(selectedNfa.title);
                                     }
                                 }}
                             >
@@ -537,9 +577,22 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                             {isSaving ? "Saving..." : "Save NFA"}
                         </button>
                     </div>
+                    {/* delete nfa selection */}
+                    <button
+                        onClick={handleDeleteNFA}
+                        className="bg-red-700 text-white font-bold rounded-md py-2 px-4 border-2 border-red-600 text-sm"
+                        title="Delete based on the title"
+                    >
+                        {isDeleting ? "Deleting..." : "Delete NFA"}
+                    </button>
                     {saveStatus && (
                         <p className={saveStatus.success ? 'text-green-500' : 'text-red-500'}>
                             {saveStatus.message}
+                        </p>
+                    )}
+                    {deleteStatus && (
+                        <p className={deleteStatus.success ? 'text-green-500' : 'text-red-500'}>
+                            {deleteStatus.message}
                         </p>
                     )}
                 </div>
