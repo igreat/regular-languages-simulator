@@ -14,6 +14,7 @@ import { EmptySet, parseRegex } from '~/simulator/regex';
 
 import { InsertNFA, SelectNFA } from '~/server/db/schema';
 import { defaultNfas } from 'data/default_nfas';
+import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
 
 export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson }>) {
     const [currentStates, setCurrentStates] = useState<string[]>([]);
@@ -558,43 +559,54 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                     </div>
                     {/* Text box to enter a custom NFA JSON */}
                     <InputTable onNFAChange={handleNFAChange} initialNFA={tableNfaJson} />
-                    {/* Inserting NFA onto database */}
-                    <div className="flex flex-row gap-2 w-full text-sm">
-                        {/* the title to give the nfa */}
-                        <input
-                            type="text"
-                            value={nfaTitle}
-                            onChange={(e) => setNfaTitle(e.target.value)}
-                            placeholder="Enter NFA title"
-                            style={{ fontFamily: "JetBrains Mono, monospace" }}
-                            className="p-2 text-blue-300 bg-gray-800 font-mono border-2 border-gray-600 rounded-md w-2/3"
-                        />
+                    <SignedIn>
+                        {/* Inserting NFA onto database */}
+                        <div className="flex flex-row gap-2 w-full text-sm">
+                            {/* the title to give the nfa */}
+                            <input
+                                type="text"
+                                value={nfaTitle}
+                                onChange={(e) => setNfaTitle(e.target.value)}
+                                placeholder="Enter NFA title"
+                                style={{ fontFamily: "JetBrains Mono, monospace" }}
+                                className="p-2 text-blue-300 bg-gray-800 font-mono border-2 border-gray-600 rounded-md w-2/3"
+                            />
+                            <button
+                                onClick={handleInsertNFA}
+                                className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 w-1/3"
+                                disabled={isSaving}
+                            >
+                                {isSaving ? "Saving..." : "Save NFA"}
+                            </button>
+                        </div>
+                        {/* delete nfa selection */}
                         <button
-                            onClick={handleInsertNFA}
-                            className="bg-green-700 text-white font-bold rounded-md py-2 px-4 border-2 border-green-600 w-1/3"
-                            disabled={isSaving}
+                            onClick={handleDeleteNFA}
+                            className="bg-red-700 text-white font-bold rounded-md py-2 px-4 border-2 border-red-600 text-sm"
+                            title="Delete based on the title"
                         >
-                            {isSaving ? "Saving..." : "Save NFA"}
+                            {isDeleting ? "Deleting..." : "Delete NFA"}
                         </button>
-                    </div>
-                    {/* delete nfa selection */}
-                    <button
-                        onClick={handleDeleteNFA}
-                        className="bg-red-700 text-white font-bold rounded-md py-2 px-4 border-2 border-red-600 text-sm"
-                        title="Delete based on the title"
-                    >
-                        {isDeleting ? "Deleting..." : "Delete NFA"}
-                    </button>
-                    {saveStatus && (
-                        <p className={saveStatus.success ? 'text-green-500' : 'text-red-500'}>
-                            {saveStatus.message}
-                        </p>
-                    )}
-                    {deleteStatus && (
-                        <p className={deleteStatus.success ? 'text-green-500' : 'text-red-500'}>
-                            {deleteStatus.message}
-                        </p>
-                    )}
+                        {saveStatus && (
+                            <p className={saveStatus.success ? 'text-green-500' : 'text-red-500'}>
+                                {saveStatus.message}
+                            </p>
+                        )}
+                        {deleteStatus && (
+                            <p className={deleteStatus.success ? 'text-green-500' : 'text-red-500'}>
+                                {deleteStatus.message}
+                            </p>
+                        )}
+                    </SignedIn>
+                    <SignedOut>
+                        {/* <p className="text-gray-500 font-bold">Sign in to save/load your own NFAs</p> */}
+                        {/* turn that into a button  that redirects to login*/}
+                        <SignInButton>
+                            <div className="bg-gray-800 text-white font-bold rounded-md py-2 px-4 border-2 border-gray-600 text-sm hover:bg-gray-700 cursor-pointer">
+                                Sign in to save/load your own NFAs
+                            </div>
+                        </SignInButton>
+                    </SignedOut>
                 </div>
             </div>
         </main >
