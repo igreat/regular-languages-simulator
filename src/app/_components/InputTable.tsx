@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import type { NFAJson, NFATransitionTable } from "~/simulator/nfa";
 
 type InputTableProps = {
@@ -80,35 +80,125 @@ function InputTable({ onNFAChange, initialNFA }: InputTableProps) {
         }
     }
 
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const handleLoadJSON = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            if (!file.name.endsWith('.json')) {
+                alert('Please select a valid .json file.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = e.target?.result as string;
+                    const nfa = JSON.parse(json) as NFAJson;
+
+                    const stateLabels = Object.keys(nfa.table);
+                    setStates(stateLabels);
+                    const symbols = new Set<string>();
+                    stateLabels.forEach((state) => {
+                        if (!nfa.table[state]) return;
+                        Object.keys(nfa.table[state]).forEach((sym) => {
+                            symbols.add(sym);
+                        });
+                    });
+                    setStartState(nfa.startState);
+                    setStatesSet(new Set(stateLabels));
+                    setInputSymbols(Array.from(symbols));
+                    setAcceptStates(nfa.acceptStates);
+                    setTable(nfa.table);
+                    const tableText: Record<string, Record<string, string>> = {};
+                    for (const state in nfa.table) {
+                        const stateTransitions = nfa.table[state] ?? {};
+                        const transitions: Record<string, string> = {};
+                        for (const symbol in stateTransitions) {
+                            transitions[symbol] = (stateTransitions[symbol] ?? []).join(",");
+                        }
+                        tableText[state] = transitions;
+                    }
+                    setTableText(tableText);
+                    alert('NFA JSON loaded successfully.');
+                } catch (error) {
+                    alert('Invalid JSON. Please check the file content and try again.');
+                }
+            };
+            reader.readAsText(file);
+        }
+    };
+
+    const handleSaveJSON = () => {
+        const json = JSON.stringify({ startState, acceptStates, table }, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'nfa.json';
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
     return (
         <div className="p-4 bg-gray-800 text-white rounded-md w-full overflow-x-auto text-sm">
-            {/* Section to add a new input symbol */}
-            <div className="flex items-center mb-4">
-                <button
-                    onClick={handleAddSymbol}
-                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
-                    disabled={newSymbol.trim().length !== 1 || inputSymbols.includes(newSymbol.trim())}
-                    title={
-                        newSymbol.trim().length !== 1
-                            ? "Enter a single character"
-                            : inputSymbols.includes(newSymbol.trim())
-                                ? "Symbol already exists"
-                                : "Add Symbol"
-                    }
-                >
-                    Add to Alphabet
-                </button>
-                <input
-                    type="text"
-                    value={newSymbol}
-                    onChange={(e) => setNewSymbol(e.target.value)}
-                    onKeyDown={handleNewSymbolKeyPress}
-                    maxLength={1}
-                    className="w-14 bg-gray-700 text-white px-2 py-1 rounded-md ml-2"
-                    placeholder="eg. a"
-                />
-            </div>
+            {/* Section to add a new input symbol and manually load/save json */}
+            <div className="flex justify-between items-center mb-4 gap-2">
+                <div className="flex items-center">
+                    <button
+                        onClick={handleAddSymbol}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
+                        disabled={newSymbol.trim().length !== 1 || inputSymbols.includes(newSymbol.trim())}
+                        title={
+                            newSymbol.trim().length !== 1
+                                ? "Enter a single character"
+                                : inputSymbols.includes(newSymbol.trim())
+                                    ? "Symbol already exists"
+                                    : "Add Symbol"
+                        }
+                    >
+                        Add to Alphabet
+                    </button>
+                    <input
+                        type="text"
+                        value={newSymbol}
+                        onChange={(e) => setNewSymbol(e.target.value)}
+                        onKeyDown={handleNewSymbolKeyPress}
+                        maxLength={1}
+                        className="w-14 bg-gray-700 text-white px-2 py-1 rounded-md ml-2"
+                        placeholder="eg. a"
+                    />
+                </div>
 
+                <div className="flex items-center gap-2">
+                    {/* Hidden file input for loading JSON */}
+                    <input
+                        type="file"
+                        accept=".json,application/json"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        onChange={handleLoadJSON}
+                    />
+
+                    {/* Button to trigger file input */}
+                    <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
+                        title="Load NFA JSON"
+                    >
+                        Load JSON
+                    </button>
+
+                    {/* Button to save JSON */}
+                    <button
+                        onClick={handleSaveJSON}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md"
+                        title="Save NFA JSON"
+                    >
+                        Save JSON
+                    </button>
+                </div>
+            </div>
             {/* DFA Transition Table */}
             <table className="min-w-full border border-gray-700">
                 <thead>
