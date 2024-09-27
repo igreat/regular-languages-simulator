@@ -450,7 +450,7 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                         )}
                     </div>
                     {/* Simulation Part */}
-                    <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative' }} className="bg-gray-950 rounded-md border-2 border-gray-800">
                         <Graph data={data} activeNodes={new Set(currentStates)} isRemovingState={isRemovingState} handleDeleteState={handleDeleteState} />
 
                         {!isRemovingState && <button
