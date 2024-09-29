@@ -83,6 +83,7 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                 if (response.ok) {
                     const data: SelectNFA[] = await response.json();
                     setPresetNfas(data);
+                    setNfaTitle(data[0] ? data[0].title : '');
                 } else {
                     const errorData = await response.json();
                     setFetchError(errorData.error || 'Failed to fetch NFAs.');
@@ -567,7 +568,7 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                             <button
                                 onClick={() => {
                                     posthog.capture('build_nfa');
-                                    
+
                                     try {
                                         const json = JSON.parse(nfaJson) as NFAJson;
                                         setNFA(new NFA(json.startState, json.acceptStates, json.table));

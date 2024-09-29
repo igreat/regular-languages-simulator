@@ -10,25 +10,25 @@ import Footer from "./_components/Footer";
 import { ClerkProvider } from '@clerk/nextjs'
 
 export const metadata: Metadata = {
-  title: "Automata Simulator",
-  description: "A feature rich Regular Languages simulator",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+    title: "Automata Simulator",
+    description: "A feature rich Regular Languages simulator",
+    icons: [{ rel: "icon", url: "/favicon.ico" }],
 };
 
 export default function RootLayout({
-  children,
+    children,
 }: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <ClerkProvider>
-      <CSPostHogProvider>
-        <html lang="en" className={`${GeistSans.variable}`}>
-          <body>
-            <TopNav />
-            {children}
-            <Footer />
-          </body>
-        </html>
-      </CSPostHogProvider>
-    </ClerkProvider>
-  );
+    return (
+        <ClerkProvider>
+            <CSPostHogProvider>
+                <html lang="en" className={`${GeistSans.variable}`}>
+                    <body>
+                        <TopNav />
+                        {children}
+                        <Footer />
+                    </body>
+                </html>
+            </CSPostHogProvider>
+        </ClerkProvider>
+    );
 }
