@@ -2,7 +2,7 @@ import "~/styles/globals.css";
 
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
-import { Analytics } from '@vercel/analytics/react';
+import { CSPostHogProvider } from './_analytics/provider';
 
 import TopNav from "./_components/TopNav";
 import Footer from "./_components/Footer";
@@ -20,14 +20,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-      <html lang="en" className={`${GeistSans.variable}`}>
-        <body>
-          <TopNav />
-          {children}
-          <Footer />
-          <Analytics />
-        </body>
-      </html>
+      <CSPostHogProvider>
+        <html lang="en" className={`${GeistSans.variable}`}>
+          <body>
+            <TopNav />
+            {children}
+            <Footer />
+          </body>
+        </html>
+      </CSPostHogProvider>
     </ClerkProvider>
   );
 }
