@@ -15,6 +15,7 @@ import { EmptySet, parseRegex } from '~/simulator/regex';
 import { InsertNFA, SelectNFA } from '~/server/db/schema';
 import { defaultNfas } from 'data/default_nfas';
 import { SignedIn, SignedOut, SignInButton } from '@clerk/nextjs';
+import { usePostHog } from 'posthog-js/react';
 
 export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson }>) {
     const [currentStates, setCurrentStates] = useState<string[]>([]);
@@ -47,6 +48,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
 
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [deleteStatus, setDeleteStatus] = useState<{ success: boolean; message: string } | null>(null);
+
+    const posthog = usePostHog();
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -137,6 +140,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
     }
 
     const handleRelabel = () => {
+        posthog.capture('relabel');
+
         if (!nfa)
             return;
 
@@ -170,6 +175,10 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
     }
 
     const handleToggleTrashState = () => {
+        posthog.capture('toggle_trash_state', {
+            trash_state_hidden: trashStateHidden,
+        });
+
         setTrashStateHidden(prev => !prev);
         if (nfa) {
             const newNFA = trashStateHidden ? nfa.trashStatesAdded() : nfa.trashStatesRemoved();
@@ -202,6 +211,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
     }
 
     const handleInsertNFA = async () => {
+        posthog.capture('insert_nfa');
+
         if (!nfaTitle) {
             setSaveStatus({ success: false, message: 'Please enter a title for the NFA.' });
             return;
@@ -242,6 +253,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
     };
 
     const handleDeleteNFA = async () => {
+        posthog.capture('delete_nfa');
+
         setIsDeleting(true);
         setDeleteStatus(null);
         try {
@@ -303,6 +316,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                         />
                         <button
                             onClick={() => {
+                                posthog.capture('regex_to_nfa');
+
                                 try {
                                     if (!regexInput) {
                                         setRegexInputError("Are you sure you want empty regex? Enter () for empty regex.");
@@ -336,6 +351,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                     <div className="flex flex-row justify-between gap-4 w-full">
                         <button
                             onClick={() => {
+                                posthog.capture('nfa_to_dfa');
+
                                 if (!nfa)
                                     return;
                                 const newNFA = nfa.toDFA().toNFA();
@@ -356,6 +373,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                         </button>
                         <button
                             onClick={() => {
+                                posthog.capture('minimize_dfa');
+
                                 if (!nfa)
                                     return;
 
@@ -389,6 +408,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                         </button>
                         <button
                             onClick={() => {
+                                posthog.capture('copy_to_table');
+
                                 if (!nfa)
                                     return;
                                 setTableNfaJson(nfa.toJSON());
@@ -402,6 +423,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                     <div className="flex flex-row justify-left gap-4 w-full">
                         <button
                             onClick={() => {
+                                posthog.capture('simplify_to_regex');
+
                                 setIsReducingToRegex(true);
                             }}
                             className="bg-green-700 text-white font-bold rounded-md py-2 px-2 border-2 border-green-600 w-full"
@@ -410,6 +433,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                         </button>
                         {isReducingToRegex && <button
                             onClick={() => {
+                                posthog.capture('convert_to_gnfa');
+
                                 setIsGNFA(true);
                                 if (!nfa) return;
                                 const newGnfa = GNFA.fromNFA(nfa);
@@ -442,7 +467,10 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                                 {/* Toggle remove state */}
                                 <button
                                     className={`${isRemovingState ? "bg-blue-500" : "bg-red-500"} text-white text-sm font-bold py-2 px-2 rounded w-full`}
-                                    onClick={() => setIsRemovingState(prev => !prev)}
+                                    onClick={() => {
+                                        posthog.capture('toggle_remove_state');
+                                        setIsRemovingState(prev => !prev)
+                                    }}
                                 >
                                     {isRemovingState ? "Stop Removing States" : "Start Removing States"}
                                 </button>
@@ -487,6 +515,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                         />
                         <button
                             onClick={() => {
+                                posthog.capture('simulate');
+
                                 setInputPos(0);
                                 setCurrentStates([]);
                                 if (nfa) {
@@ -515,6 +545,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                                 id="preset-nfa"
                                 className="p-2 bg-gray-800 border-2 border-gray-600 rounded-md text-sm w-2/3"
                                 onChange={(e) => {
+                                    posthog.capture('select_preset_nfa');
+
                                     const selectedNfa = presetNfas.find((nfa) => nfa.id === parseInt(e.target.value));
                                     if (selectedNfa) {
                                         setTableNfaJson({
@@ -534,6 +566,8 @@ export default function MainPage({ initialNfa }: Readonly<{ initialNfa: NFAJson 
                             </select>
                             <button
                                 onClick={() => {
+                                    posthog.capture('build_nfa');
+                                    
                                     try {
                                         const json = JSON.parse(nfaJson) as NFAJson;
                                         setNFA(new NFA(json.startState, json.acceptStates, json.table));
